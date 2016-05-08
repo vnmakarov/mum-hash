@@ -92,7 +92,11 @@ typedef unsigned __int64 uint64_t;
 #if _MC_USE_INT128
 typedef __uint128_t _mc_ti;
 #else
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+typedef struct {uint64_t lo, hi;} _mc_ti;
+#else
 typedef struct {uint64_t hi, lo;} _mc_ti;
+#endif
 #endif
 
 #define inline
