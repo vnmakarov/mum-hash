@@ -1,0 +1,26 @@
+2016-05-08  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* mum.h: New file.
+	* mum512.h: New file.
+	* README.md: New file.
+	* src/bbs-prng.h: Ditto.
+	* src/bench: Ditto.
+	* src/bench.c: Ditto.
+	* src/bench-crypto: Ditto.
+	* src/bench-crypto.c: Ditto.
+	* src/bench-prng: Ditto.
+	* src/bench-prng.c: Ditto.
+	* src/byte_order.[ch]: Ditto.
+	* src/chacha-prng.h: Ditto.
+	* src/City.cpp: Ditto.
+	* src/City.h: Ditto.
+	* src/mum512-prng.h: Ditto.
+	* src/mum-prng.h: Ditto.
+	* src/sha3.[ch]: Ditto.
+	* src/sha512.[ch]: Ditto.
+	* src/sip24-prng.h: Ditto.
+	* src/siphash24.c: Ditto.
+	* src/Spooky.cpp: Ditto.
+	* src/Spooky.h: Ditto.
+	* src/ustd.h: Ditto.
+

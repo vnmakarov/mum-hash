@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Benchmarking different hash functions.
+
+IFS='%'
+temp=__temp
+
+
+print() {
+    s=`egrep 'user[ 	]*[0-9]' $2 | sed s/.*user// | sed s/\\t//`
+    echo $1 "$s"s
+}
+
+echo compiling Spooky
+g++ -O3 -w -c Spooky.cpp || exit 1
+echo compiling City
+g++ -O3 -w -c City.cpp || exit 1
+
+echo compiling SipHash24
+g++ -O3 -w -c siphash24.c || exit 1
+
+echo +++8-byte speed '(1,280M keys)':
+g++ -DSPEED2 -O3 -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
+g++ -DSPEED2 -O3 -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
+g++ -DSPEED2 -O3 -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+g++ -DSPEED2 -O3 -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
+
+echo +++16-byte speed '(1,280M keys)':
+g++ -DSPEED3 -O3 -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
+g++ -DSPEED3 -O3 -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
+g++ -DSPEED3 -O3 -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+g++ -DSPEED3 -O3 -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
+
+echo +++32-byte speed '(1,280M keys)':
+g++ -DSPEED4 -O3 -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
+g++ -DSPEED4 -O3 -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
+g++ -DSPEED4 -O3 -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+g++ -DSPEED4 -O3 -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
+
+echo +++64-byte speed '(1,280M keys)':
+g++ -DSPEED5 -O3 -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
+g++ -DSPEED5 -O3 -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
+g++ -DSPEED5 -O3 -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+g++ -DSPEED5 -O3 -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
+
+echo +++128-byte speed '(1,280M keys)':
+g++ -DSPEED6 -O3 -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
+g++ -DSPEED6 -O3 -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
+g++ -DSPEED6 -O3 -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+g++ -DSPEED6 -O3 -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
+
+echo +++Bulk speed 1KB '(100M keys)':
+g++ -DSPEED -O3 -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
+g++ -DSPEED -O3 -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
+g++ -DSPEED -O3 -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+g++ -DSPEED -O3 -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
+
+rm -rf ./a.out $temp Spooky.o City.o siphash24.o
