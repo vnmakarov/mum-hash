@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Benchmarking different Pseudo Random Generators
+
+echo +++pseudo random number generation speed '(PRNs/sec)':
+gcc -DBBS -O3 -w bench-prng.c -lgmp && echo -n 'BBS   : ' && ./a.out 2>&1
+gcc -DCHACHA -O3 -w bench-prng.c && echo -n 'ChaCha: ' && ./a.out 2>&1
+gcc -DSIP24 -O3 -w bench-prng.c && echo -n 'Sip24:  ' && ./a.out 2>&1
+gcc -DMUM512 -DMUM512_ROUNDS=2 -I../ -O3 -w bench-prng.c && echo -n 'MUM512: ' && ./a.out 2>&1
+gcc -DMUM -I../ -O3 -w bench-prng.c && echo -n 'MUM   : ' && ./a.out 2>&1
+gcc -DRAND -I../ -O3 -w bench-prng.c && echo -n 'RAND  : ' && ./a.out 2>&1
+
+rm -rf ./a.out
