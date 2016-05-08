@@ -63,7 +63,7 @@ int main () {
     arr[i] = rand ();
   }
   for (i = 0; i < 100000000; i++)
-    test (arr, 256 * 4, 2, &out);
+    test (arr, 256 * 4, 2, &out), arr[0] = out;
   printf ("%s:%llx\n", (size_t)arr & 0x7 ? "unaligned" : "aligned", out);
   return 0;
 }
