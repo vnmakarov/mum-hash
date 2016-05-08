@@ -1,5 +1,9 @@
 2016-05-08  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
+	* mum512.h (_mc_ti): Define depending on endianess.
+
+2016-05-08  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
 	* mum512.h (_mc_mul64): Change multiplication result names.
 	(_mc_permute): Use _mc_xor.
 
