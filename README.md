@@ -3,7 +3,7 @@
   suitable for different hash table implementations
 * MUM means **MU**ltiply and **M**ix
   * It is a name of the base transformation on which hashing is implemented
-  * Modern processors have a fast logic to do long multiplications
+  * Modern processors have a fast logic to do long number multiplications
   * It is very attractable to use it for fast hashing
     * For example, 64x64-bit multiplication can do the same work as 32
       shifts and additions
@@ -31,7 +31,7 @@
 
 # MUM implementation details
 
-* Input 64-bit data are randomized by 64x64-bit multiplication and mixing
+* Input 64-bit data are randomized by 64x64->128 bit multiplication and mixing
   high- and low-parts of the multiplication result by using an addition.
   The result is mixed with the current state by using XOR
   * Instead of the addition for mixing high- and low- parts, XOR could be
@@ -42,7 +42,7 @@
   bit values are used for the multiplication
 * When all primes are used once, the state is randomized and the same
   prime numbers are used again for subsequent data randomization
-* Major loop is transformed to be unrolled by compiler to benefit from the
+* Major loop is transformed to be **unrolled** by compiler to benefit from the
   compiler instruction scheduling optimization and OOO instruction
   execution in modern CPUs
 * x86-64 *AVX2* insn `MULX` is used on processors where it is implemented
@@ -50,11 +50,11 @@
   * Although on modern Intel processors `MULQ` takes 3-cylces vs. 4 for
     `MULX`, `MULX` permits more freedom in insn scheduling as it uses less
     fixed registers.  That is a reason for the improvement
-  * To make the code portable, GCC function multiversioning is used.
+  * To make the code portable, **GCC function multiversioning** is used.
     The best code is chosen depending on the used processor features
 * AARCH64 128-bit result multiplication is very slow as it is
   implemented by a GCC library function
-  * To use only 2 insns for such multiplication one GCC asm extension
+  * To use only 2 insns for such multiplication one GCC **asm extension**
     was added
     
    
@@ -134,19 +134,19 @@
     * *sha1* is about 20-30 slower than MUM and City on the bulk speed tests
     * The new fastest cryptographic hash function *SipHash* is up to 10
       times slower
-  * MUM is also resistant to preimage attack (finding a string with given hash)
-    * To make moving to previous state values we use 1-to-1 one way
+  * MUM is also *resistant* to preimage attack (finding a string with given hash)
+    * To make hard moving to previous state values we use mostly 1-to-1 one way
       function `lo(x*C) + hi(x*C)` where C is a constant.  Brute force
       solution of equation `f(x) = a` probably requires `2^63` tries.
       Another used function equation `x ^ y = a` has a `2^64`
-      solutions.  It complicates finding the overal solution further.
-  * If somebody is not convinced, you can use randomly chosen
-    multiplication constants (see function `mum_hash_randomize`).
+      solutions.  It complicates finding the overal solution further
+  * If somebody is not convinced, you can use **randomly chosen
+    multiplication constants** (see function `mum_hash_randomize`).
     Finding a string with a given hash even if you know a string with such
     hash probably will be close to finding two or more solutions of
     *Diophantine* equations
   * If somebody is still not convinced, you can implement hash tables
-    to recognize the attack and rebuild the table using MUM function
+    to **recognize the attack and rebuild** the table using MUM function
     with the new multiplication constants
   * Analogous approach can be used if you use weak hash function as
     MurMur or City.  Instead of using cryptographic hash functions
@@ -181,13 +181,13 @@ sh bench
       different on SSE4.2 nad non SSE4.2 targets) or Spooky (BE/LE machines)
       * If you need the same MUM hash independent on the target, please
         define macro `MUM_TARGET_INDEPENDENT_HASH`
-  * There is a variant of MUM called MUM512 which can be a candidate
+  * There is a variant of MUM called MUM512 which can be a **candidate**
     for a crypto-hash function and keyed crypto-hash function and
     might be interesting for researchers
     * The **key** is **256**-bit
     * The **state** and the **output** are **512**-bit
     * The **block** size is **512**-bit
-    * It uses 128x128-bit multiplication which is analogous to about
+    * It uses 128x128->256-bit multiplication which is analogous to about
       64 shifts and additions for 128-bit block word instead of 80
       rounds of shifts, additions, logical operations for 512-bit block
       in sha2-512.
@@ -198,13 +198,13 @@ sh bench
       * I might be do this in the future as I am interesting in
         differential characteristics of the MUM512 base transformation
         step (128x128-bit multiplications with addition of high and
-        low 64-bit parts)
+        low 128-bit parts)
       * I am interesting also in the right choice of the multiplication constants
       * May be somebody will do the analysis.  I will be glad to hear anything.
         Who knows, may be it can be easily broken as Nimbus cipher.
     * The current code might be also vulnerable to timing attack on
       systems with varying multiplication instruction latency time.
-      There is no code to prevent it
+      There is no code for now to prevent it
   * To compare the MUM512 speed with the speed of SHA-2 (SHA512) and
     SHA-3 (SHA3-512) go to the directory `src` and run a script `sh bench-crypto`
     * SHA-2 and SHA-3 code is taken from [RHash](https://github.com/rhash/RHash.git)
