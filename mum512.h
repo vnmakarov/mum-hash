@@ -161,6 +161,7 @@ static inline _mc_ti _mc_rotr (_mc_ti a, int sh) {
     res.lo = a.lo >> sh | a.hi << (64 - sh);
     res.hi = a.hi >> sh | a.lo << (64 - sh);
   } else {
+    sh -= 64;
     res.lo = a.hi >> sh | a.lo << (64 - sh);
     res.hi = a.lo >> sh | a.hi << (64 - sh);
   }
