@@ -1,5 +1,10 @@
 2016-05-08  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
+	src/bench.c (_mc_mul64): Change multiplication result names.
+	(_mc_permute): Use _mc_xor.
+
+2016-05-08  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
 	src/bench.c (main): Change input every iteration.
 
 2016-05-08  Vladimir Makarov  <vmakarov@gcc.gnu.org>

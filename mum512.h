@@ -163,24 +163,23 @@ static inline _mc_ti _mc_rotr (_mc_ti a, int sh) {
   return res;
 }
 
-
 static inline _mc_ti _mc_mul64 (uint64_t a, uint64_t b) {
   /* Implementation of 64x64->128-bit multiplication by four 32x32->64
      bit multiplication.  */
   uint64_t ha = a >> 32, hb = b >> 32;
   uint64_t la = (uint32_t) a, lb = (uint32_t) b;
-  uint64_t r65_128 =  ha * hb;
-  uint64_t r33_96_0 = ha * lb;
-  uint64_t r33_96_1 = hb * la;
-  uint64_t r1_64 =  la * lb;
+  uint64_t rhi =  ha * hb;
+  uint64_t rm_0 = ha * lb;
+  uint64_t rm_1 = hb * la;
+  uint64_t rlo =  la * lb;
   uint64_t lo, carry;
   _mc_ti res;
   
-  lo = r1_64 + (r33_96_0 << 32);
-  carry = lo < r1_64;
-  res.lo = lo + (r33_96_1 << 32);
+  lo = rlo + (rm_0 << 32);
+  carry = lo < rlo;
+  res.lo = lo + (rm_1 << 32);
   carry += res.lo < lo;
-  res.hi = r65_128 + (r33_96_0 >> 32) + (r33_96_1 >> 32) + carry;
+  res.hi = rhi + (rm_0 >> 32) + (rm_1 >> 32) + carry;
   return res;
 }
 
@@ -389,14 +388,20 @@ _mc_hash_aligned (_mc_ti state[4], const void *data, size_t len) {
 static inline void
 _mc_permute (_mc_ti t[4]) {
   /* Row */
-  t[0] = _mc_rotr (t[0] ^ t[1], 17); t[1] = _mc_rotr (t[1] ^ t[0], 33);
-  t[3] = _mc_rotr (t[3] ^ t[2], 49); t[2] = _mc_rotr (t[2] ^ t[3], 65);
+  t[0] = _mc_rotr (_mc_xor (t[0], t[1]), 17);
+  t[1] = _mc_rotr (_mc_xor (t[1], t[0]), 33);
+  t[3] = _mc_rotr (_mc_xor (t[3], t[2]), 49);
+  t[2] = _mc_rotr (_mc_xor (t[2], t[3]), 65);
   /* Column */
-  t[0] = _mc_rotr (t[0] ^ t[2], 9); t[2] = _mc_rotr (t[2] ^ t[0], 25);
-  t[3] = _mc_rotr (t[3] ^ t[1], 41); t[1] = _mc_rotr (t[1] ^ t[3], 57);
+  t[0] = _mc_rotr (_mc_xor (t[0], t[2]), 9);
+  t[2] = _mc_rotr (_mc_xor (t[2], t[0]), 25);
+  t[3] = _mc_rotr (_mc_xor (t[3], t[1]), 41);
+  t[1] = _mc_rotr (_mc_xor (t[1], t[3]), 57);
   /* Diagonal */
-  t[0] = _mc_rotr (t[0] ^ t[3], 13); t[3] = _mc_rotr (t[3] ^ t[0], 29);
-  t[2] = _mc_rotr (t[2] ^ t[1], 45); t[1] = _mc_rotr (t[1] ^ t[2], 61);
+  t[0] = _mc_rotr (_mc_xor (t[0], t[3]), 13);
+  t[3] = _mc_rotr (_mc_xor (t[3], t[0]), 29);
+  t[2] = _mc_rotr (_mc_xor (t[2], t[1]), 45);
+  t[1] = _mc_rotr (_mc_xor (t[1], t[2]), 61);
 }
 
 static inline void
