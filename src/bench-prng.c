@@ -29,6 +29,12 @@ static void finish_prng (void) { finish_mum_prng (); }
 static void init_prng (void) { init_mum512_prng (); }
 static uint64_t get_prn (void) { return get_mum512_prn (); }
 static void finish_prng (void) { finish_mum512_prng (); }
+#elif defined(XOROSHIRO128P)
+#include "xoroshiro128plus.c"
+#define N2 30000
+static void init_prng (void) { }
+static uint64_t get_prn (void) { return next (); }
+static void finish_prng (void) { }
 #elif defined(RAND)
 #include <stdlib.h>
 #include <stdint.h>

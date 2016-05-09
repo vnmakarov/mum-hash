@@ -84,36 +84,36 @@
   
 # Intel i7-4790K (4.2GHz)
 
-|                           |  MUM | City64| xxHash64|  Spooky|SipHash24| 
-:---------------------------|-----:|------:|--------:|-------:|--------:|
-8 bytes  (1,280M strings)   | 5.52s| 10.83s| 16.22s  |  10.35s|   26.43s|
-16 bytes (1,280M strings)   | 7.38s| 11.15s| 18.07s  |  18.29s|   31.11s|
-32 bytes (1,280M strings)   | 8.06s| 13.15s| 19.06s  |  18.50s|   42.73s|
-64 bytes (1,280M strings)   |11.59s| 13.75s| 25.74s  |  26.59s|   63.38s|
-128 bytes (1,280M strings)  |17.16s| 18.99s| 18.99s  |  42.88s|  106.77s|
-1KB (100M strings)          | 6.61s|  6.37s|  8.45s  |   8.80s|   53.20s|
+|                           |  MUM | City64|  Spooky| xxHash64|SipHash24| 
+:---------------------------|-----:|------:|-------:|--------:|--------:|
+8 bytes  (1,280M strings)   | 5.52s| 10.83s|  10.35s| 16.22s  |   26.43s|
+16 bytes (1,280M strings)   | 7.38s| 11.15s|  18.29s| 18.07s  |   31.11s|
+32 bytes (1,280M strings)   | 8.06s| 13.15s|  18.50s| 19.06s  |   42.73s|
+64 bytes (1,280M strings)   |11.59s| 13.75s|  26.59s| 25.74s  |   63.38s|
+128 bytes (1,280M strings)  |17.16s| 18.99s|  42.88s| 18.99s  |  106.77s|
+1KB (100M strings)          | 6.61s|  6.37s|   8.80s|  8.45s  |   53.20s|
 
 # Power7 (3.55GHz)
 
-|                           | MUM  | City64|  Spooky|SipHash24|
-:---------------------------|-----:|------:|-------:|--------:|
-8 bytes  (1,280M strings)   | 8.63s| 26.61s|  27.04s|   55.64s|
-16 bytes (1,280M strings)   |18.30s| 26.07s|  41.77s|   62.53s|
-32 bytes (1,280M strings)   |19.29s| 30.03s|  41.01s|   84.89s|
-64 bytes (1,280M strings)   |21.95s| 33.71s|  57.68s|  122.49s|
-128 bytes (1,280M strings)  |30.20s| 57.68s|  90.56s|  197.45s|
-1KB (100M strings)          |14.31s| 16.93s|  16.26s|   96.78s|
+|                           | MUM  | City64|  Spooky| xxHash64|SipHash24|
+:---------------------------|-----:|------:|-------:|--------:|--------:|
+8 bytes  (1,280M strings)   | 8.63s| 26.61s|  27.04s| 77.30s  |   55.64s|
+16 bytes (1,280M strings)   |18.30s| 26.07s|  41.77s| 79.51s  |   62.53s|
+32 bytes (1,280M strings)   |19.29s| 30.03s|  41.01s| 76.90s  |   84.89s|
+64 bytes (1,280M strings)   |21.95s| 33.71s|  57.68s| 82.59s  |  122.49s|
+128 bytes (1,280M strings)  |30.20s| 57.68s|  90.56s| 96.09s  |  197.45s|
+1KB (100M strings)          |14.31s| 16.93s|  16.26s| 20.96s  |   96.78s|
 
 # AARCH64 (APM X-Gene)
 
-|                           | MUM  | City64|  Spooky|SipHash24|
-:---------------------------|-----:|------:|-------:|--------:|
-8 bytes  (1,280M strings)   |14.43s| 27.27s|  27.80s|   68.44s|
-16 bytes (1,280M strings)   |22.94s| 28.87s|  43.85s|   78.08s|
-32 bytes (1,280M strings)   |29.94s| 33.69s|  47.06s|   98.93s|
-64 bytes (1,280M strings)   |43.83s| 40.64s|  64.70s|  141.71s|
-128 bytes (1,280M strings)  |70.05s| 74.33s|  98.93s|  235.83s|
-1KB (100M strings)          |34.05s| 22.91s|  24.23s|  104.98s|
+|                           | MUM  | City64|  Spooky| xxHash64|SipHash24|
+:---------------------------|-----:|------:|-------:|--------:|--------:|
+8 bytes  (1,280M strings)   |14.43s| 27.27s|  27.80s| 56.69s  |   68.44s|
+16 bytes (1,280M strings)   |22.94s| 28.87s|  43.85s| 62.57s  |   78.08s|
+32 bytes (1,280M strings)   |29.94s| 33.69s|  47.06s| 79.14s  |   98.93s|
+64 bytes (1,280M strings)   |43.83s| 40.64s|  64.70s| 90.38s  |  141.71s|
+128 bytes (1,280M strings)  |70.05s| 74.33s|  98.93s|112.83s  |  235.83s|
+1KB (100M strings)          |34.05s| 22.91s|  24.23s| 33.42s  |  104.98s|
 
 # Vectorization
 * A major loop in function `_mum_hash_aligned` could be vectorized
@@ -232,9 +232,13 @@ sh bench
   * For the comparison I wrote crypto-secured Blum Blum Shub PRNG
     (file `bbs-prng.h`) and PRNGs based on fast cryto-level hash
     functions in ChaCha stream cipher (file `chacha-prng.h`) and
-    SipHash24 (file `sip24-prng.h`)
+    SipHash24 (file `sip24-prng.h`).
     * The additional PRNGs also pass the Statistical Test Suite
-  * Here is the speed of the PRNGs in millions generated PRNs per second on 4.2 GHz Intel i7-4790K:
+  * For the comparison I also added the fastest PRNG
+    [xoroshiro128+](http://xoroshiro.di.unimi.it/xoroshiro128plus.c)
+    (it is not a crypto level PRNG)
+  * Here is the speed of the PRNGs in millions generated PRNs
+    per second on 4.2 GHz Intel i7-4790K:
 
 |                        | M prns/sec  |
 :------------------------|------------:|
@@ -243,5 +247,6 @@ ChaCha                   | 106         |
 SipHash24                | 383         |
 MUM512                   |  67         |
 MUM                      | 703         |
+XOROSHIRO128+            |1145         |
 GLIBC RAND               | 169         |
 
