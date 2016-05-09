@@ -1,3 +1,11 @@
+2016-05-09  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Add results for xxHash64.
+	* src/xxhash.[ch]: New.
+	* src/bench.c: Add code for xxHash64.
+	(state, xxHash64_test): New.
+	* src/bench: Add runs for xxHash64.
+
 2016-05-08  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Some editing.

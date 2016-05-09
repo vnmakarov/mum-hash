@@ -34,6 +34,28 @@ static void siphash_test (const void * key, int len, uint32_t seed, void * out) 
 #define test siphash_test
 #define test64 test
 
+#elif defined(xxHash)
+
+#ifdef _MSC_VER
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+#include <stdint.h>
+#endif
+
+#include "xxhash.h"
+static XXH64_state_t* state = NULL;
+
+static void xxHash64_test(const void *key, int len, uint32_t seed, void *out) {
+  if (! state) state = XXH64_createState ();
+  XXH64_reset (state, seed);
+  XXH64_update (state, key, len);
+  *(uint64_t*)out = XXH64_digest (state);
+}
+
+#define test xxHash64_test
+#define test64 test
+
 #elif defined(MUM)
 
 #include "mum.h"
