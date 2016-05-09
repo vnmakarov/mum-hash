@@ -64,6 +64,8 @@
   non-cryptographic hash functions I know:
   * Google City64 (sources are taken from SMHasher)
   * Bob Jenkins Spooky (sources are taken from SMHasher)
+  * Yann Collet's xxHash64 (sources are taken from the
+    [original repository](https://github.com/Cyan4973/xxHash))
 * Murmur hash functions are slower so I don't compare it here
 * I also added J. Aumasson and D. Bernstein's
   [SipHash24](https://github.com/veorq/SipHash) for the comparison as it
@@ -82,14 +84,14 @@
   
 # Intel i7-4790K (4.2GHz)
 
-|                           |  MUM | City64|  Spooky|SipHash24| 
-:---------------------------|-----:|------:|-------:|--------:|
-8 bytes  (1,280M strings)   | 5.52s| 10.83s|  10.35s|   26.43s|
-16 bytes (1,280M strings)   | 7.38s| 11.15s|  18.29s|   31.11s|
-32 bytes (1,280M strings)   | 8.06s| 13.15s|  18.50s|   42.73s|
-64 bytes (1,280M strings)   |11.59s| 13.75s|  26.59s|   63.38s|
-128 bytes (1,280M strings)  |17.16s| 18.99s|  42.88s|  106.77s|
-1KB (100M strings)          | 6.61s|  6.37s|   8.80s|   53.20s|
+|                           |  MUM | City64| xxHash64|  Spooky|SipHash24| 
+:---------------------------|-----:|------:|--------:|-------:|--------:|
+8 bytes  (1,280M strings)   | 5.52s| 10.83s| 16.22s  |  10.35s|   26.43s|
+16 bytes (1,280M strings)   | 7.38s| 11.15s| 18.07s  |  18.29s|   31.11s|
+32 bytes (1,280M strings)   | 8.06s| 13.15s| 19.06s  |  18.50s|   42.73s|
+64 bytes (1,280M strings)   |11.59s| 13.75s| 25.74s  |  26.59s|   63.38s|
+128 bytes (1,280M strings)  |17.16s| 18.99s| 18.99s  |  42.88s|  106.77s|
+1KB (100M strings)          | 6.61s|  6.37s|  8.45s  |   8.80s|   53.20s|
 
 # Power7 (3.55GHz)
 
