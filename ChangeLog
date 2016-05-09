@@ -1,10 +1,16 @@
 2016-05-09  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
+	* src/mum-prng.h (init_mum_prng): Use seed == 1.
+	(get_mum_prn): Fix prns generation.
+	* README.md: Update result for MUM PRNG.
+
+2016-05-09  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
 	* README.md: Add results for xxHash64 on AARCH64 and PPC64 and for
 	xoroshiro128+.
-	(xoroshiro128plus.c): New.
-	(bench-prng.c): Add a code to test xoroshiro128+.
-	(bench-prng): Add a run to test speed of xoroshiro128+.
+	* src/xoroshiro128plus.c: New.
+	* src/bench-prng.c: Add a code to test xoroshiro128+.
+	* src/bench-prng: Add a run to test speed of xoroshiro128+.
 
 2016-05-09  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 

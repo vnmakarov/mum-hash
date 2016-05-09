@@ -246,7 +246,7 @@ BBS                      | 0.057       |
 ChaCha                   | 106         |
 SipHash24                | 383         |
 MUM512                   |  67         |
-MUM                      | 703         |
+MUM                      | 687         |
 XOROSHIRO128+            |1145         |
 GLIBC RAND               | 169         |
 

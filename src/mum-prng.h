@@ -48,17 +48,23 @@ static struct {
 } mum_prng_state;
 
 static inline void
-init_mum_prng (void) { mum_prng_state.state = 0; }
+init_mum_prng (void) { mum_prng_state.state = 1; }
 
 static inline void
 set_mum_seed (uint32_t seed) { mum_prng_state.state = seed; }
 
 static inline uint64_t
 get_mum_prn (void) {
-  mum_prng_state.state++;
+  uint64_t r;
+#ifdef MUM_PRNG_STANDARD_INTERFACE
   /* mum_hash64 provides the same hash for the same key.  Don't use
      mum_hash here.  */
-  return mum_hash64 (mum_prng_state.state, 0x746addee2093e7e1ULL);
+  r = mum_hash64 (mum_prng_state.state, 0x746addee2093e7e1ULL);
+#else
+  r = _mum (mum_prng_state.state, _mum_key_step_prime);
+#endif
+  mum_prng_state.state ^= r;
+  return r;
 }
 
 static inline void
