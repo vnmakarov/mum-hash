@@ -243,12 +243,12 @@ sh bench
     * I added code to calculate a few PRNs at once to calculate them in parallel
     * I added AVX2 version functions to use faster `MULX` instruction
     * The new version also passes NIST Statistical Test Suite
-    * The new version is almost 2 times faster the old one and MUM PRN
+    * The new version is **almost 2 times** faster the old one and MUM PRN
       speed became almost the same as xoroshiro128+ one
       * xoroshiro128+ and MUM PRNG functions are inlined in the benchmark program
       * both code without inlining will be visibly slower and the speed
         difference will be negligible as one PRN calculation takes
-        only about 3.5 machine cycle for xoroshiro128+ and MUM PRN.
+        only about **3.5 machine cycle** for xoroshiro128+ and MUM PRN.
   * Here is the speed of the PRNGs in millions generated PRNs
     per second on 4.2 GHz Intel i7-4790K:
 

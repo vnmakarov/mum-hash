@@ -1,5 +1,9 @@
 2016-05-10  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
+	* README.md: Highlight the new MUM PRNG speed.
+
+2016-05-10  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
 	* README.md: Describe a new version of MUM PRNG and update its
 	speed.
 	* src/mum-prng.h (MUM_PRNG_UNROLL): New.
