@@ -1,3 +1,20 @@
+2016-05-10  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Describe a new version of MUM PRNG and update its
+	speed.
+	* src/mum-prng.h (MUM_PRNG_UNROLL): New.
+	(EXPECT): New.
+	(mum_prng_state): Rename to _mum_prng_state.  Add fields count and
+	avx2_support.  Make state an array.
+	(_mum_prng_setup_avx2, _mum_prn_update, _mum_prn_avx2_update):
+	New.
+	(_start_mum_prng): New.
+	(init_mum_prng): Use _start_mum_prng.
+	(set_mum_seed): Rename to set_mum_prng_seed.  Use _start_mum_prng.
+	(get_mum_prn): Rewrite.
+	* src/bench-prng.c (init_prng): Randomize multiplication
+	constants.
+
 2016-05-09  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* src/mum-prng.h (init_mum_prng): Use seed == 1.

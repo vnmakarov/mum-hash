@@ -33,8 +33,8 @@
    Pseudorandom Number Generators for Cryptographic Applications
    (version 2.2.1) with 1000 bitstreams each containing 1M bits.
 
-   The generation of a new number takes about 6 CPU cycles on x86_64
-   (Intel 4.2GHz i7-4790K), or speed of the generation is about 700M
+   The generation of a new number takes about 3.5 CPU cycles on x86_64
+   (Intel 4.2GHz i7-4790K), or speed of the generation is about 1120M
    numbers per sec.  So it is very fast.  */
 
 #ifndef __MUM_PRNG__
@@ -42,34 +42,94 @@
 
 #include "mum.h"
 
+#ifndef MUM_PRNG_UNROLL
+#define MUM_PRNG_UNROLL 16
+#endif
+
+#if MUM_PRNG_UNROLL < 1 || MUM_PRNG_UNROLL > 16
+#error "wrong MUM_PRNG_UNROLL value"
+#endif
+
+#ifdef __GNUC__
+#define EXPECT(cond, v) __builtin_expect((cond), (v))
+#else
+#define EXPECT(cond, v) (cond)
+#endif
+
 static struct {
-  /* MUM state */
-  uint64_t state; 
-} mum_prng_state;
+  int count; 
+#if defined(__x86_64__) && defined(__GNUC__)
+  int avx2_support;
+#endif
+  /* MUM PRNG state */
+  uint64_t state[MUM_PRNG_UNROLL]; 
+} _mum_prng_state;
+
+#if defined(__x86_64__) && defined(__GNUC__)
+static inline void
+_mum_prng_setup_avx2 (void) {
+  __builtin_cpu_init ();
+  _mum_prng_state.avx2_support = __builtin_cpu_supports ("avx2");
+}
+#endif
 
 static inline void
-init_mum_prng (void) { mum_prng_state.state = 1; }
+_start_mum_prng (uint32_t seed) {
+  int i;
+
+  _mum_prng_state.count = MUM_PRNG_UNROLL;
+  for (i = 0; i < MUM_PRNG_UNROLL; i++)
+    _mum_prng_state.state[i] = seed + 1;
+#if defined(__x86_64__) && defined(__GNUC__)
+  _mum_prng_setup_avx2 ();
+#endif
+}
 
 static inline void
-set_mum_seed (uint32_t seed) { mum_prng_state.state = seed; }
+init_mum_prng (void) {
+  _start_mum_prng (0);
+}
+
+static inline void
+set_mum_prng_seed (uint32_t seed) {
+  _start_mum_prng (seed);
+}
+
+#if defined(__x86_64__) && defined(__GNUC__)
+static void _MUM_TARGET("arch=haswell")
+_mum_prng_update_avx2 (void) {
+  int i;
+
+  _mum_prng_state.count = 0;
+  for (i = 0; i < MUM_PRNG_UNROLL; i++)
+    _mum_prng_state.state[i] ^= _mum (_mum_prng_state.state[i], _mum_primes[i]);
+}
+#endif
+
+static void __attribute__ ((noinline))
+_mum_prng_update (void) {
+  int i;
+  _mum_prng_state.count = 0;
+  for (i = 0; i < MUM_PRNG_UNROLL; i++)
+    _mum_prng_state.state[i] ^= _mum (_mum_prng_state.state[i], _mum_primes[i]);
+}
 
 static inline uint64_t
 get_mum_prn (void) {
-  uint64_t r;
-#ifdef MUM_PRNG_STANDARD_INTERFACE
-  /* mum_hash64 provides the same hash for the same key.  Don't use
-     mum_hash here.  */
-  r = mum_hash64 (mum_prng_state.state, 0x746addee2093e7e1ULL);
-#else
-  r = _mum (mum_prng_state.state, _mum_key_step_prime);
+  if (EXPECT (_mum_prng_state.count == MUM_PRNG_UNROLL, 0)) {
+#if defined(__x86_64__) && defined(__GNUC__)
+    if (EXPECT (_mum_prng_state.avx2_support, 1)) {
+      _mum_prng_update_avx2 ();
+      return _mum_prng_state.state[_mum_prng_state.count++];
+    }
 #endif
-  mum_prng_state.state ^= r;
-  return r;
+    _mum_prng_update ();
+  }
+  return _mum_prng_state.state[_mum_prng_state.count++];
 }
 
 static inline void
 finish_mum_prng (void) {
 }
-
 
 #endif

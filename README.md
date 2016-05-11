@@ -237,6 +237,18 @@ sh bench
   * For the comparison I also added the fastest PRNG
     [xoroshiro128+](http://xoroshiro.di.unimi.it/xoroshiro128plus.c)
     (it is not a crypto level PRNG)
+  * **Update**: I had no intention to tune MUM based PRNG first but
+    after adding xoroshiro128+ and finding how fast it is, I've decided
+    to speedup MUM PRNG
+    * I added code to calculate a few PRNs at once to calculate them in parallel
+    * I added AVX2 version functions to use faster `MULX` instruction
+    * The new version also passes NIST Statistical Test Suite
+    * The new version is almost 2 times faster the old one and MUM PRN
+      speed became almost the same as xoroshiro128+ one
+      * xoroshiro128+ and MUM PRNG functions are inlined in the benchmark program
+      * both code without inlining will be visibly slower and the speed
+        difference will be negligible as one PRN calculation takes
+        only about 3.5 machine cycle for xoroshiro128+ and MUM PRN.
   * Here is the speed of the PRNGs in millions generated PRNs
     per second on 4.2 GHz Intel i7-4790K:
 
@@ -246,7 +258,7 @@ BBS                      | 0.057       |
 ChaCha                   | 106         |
 SipHash24                | 383         |
 MUM512                   |  67         |
-MUM                      | 687         |
+MUM                      |1116         |
 XOROSHIRO128+            |1145         |
 GLIBC RAND               | 169         |
 
