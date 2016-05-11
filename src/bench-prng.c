@@ -20,7 +20,7 @@ static void finish_prng (void) { finish_sip24_prng (); }
 #elif defined(MUM)
 #include "mum-prng.h"
 #define N2 30000
-static void init_prng (void) { init_mum_prng (); }
+static void init_prng (void) { mum_hash_randomize (0); init_mum_prng (); }
 static uint64_t get_prn (void) { return get_mum_prn (); }
 static void finish_prng (void) { finish_mum_prng (); }
 #elif defined(MUM512)
