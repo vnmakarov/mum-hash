@@ -21,6 +21,13 @@ g++ -O3 -w -c xxhash.c || exit 1
 echo compiling SipHash24
 g++ -O3 -w -c siphash24.c || exit 1
 
+echo +++5-byte speed '(1,280M keys)':
+g++ -DSPEED1 -O3 -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
+g++ -DSPEED1 -O3 -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
+g++ -DSPEED1 -O3 -w -fpermissive -DxxHash xxhash.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
+g++ -DSPEED1 -O3 -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+g++ -DSPEED1 -O3 -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
+
 echo +++8-byte speed '(1,280M keys)':
 g++ -DSPEED2 -O3 -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
 g++ -DSPEED2 -O3 -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
