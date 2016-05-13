@@ -70,6 +70,15 @@
 * I also added J. Aumasson and D. Bernstein's
   [SipHash24](https://github.com/veorq/SipHash) for the comparison as it
   is a popular choice for hash table implementation these days
+* **Update**:
+  * A [metro hash](https://github.com/jandrewrogers/MetroHash)
+    was added as people asked and as metro hash is
+    claimed to be the fastest hash function
+    * metro hash is not portable as others functions as it does not deal
+      with unaligned accesses problem on some targets
+    * metro hash will produce different hash for LE/BE targets
+    * some people on hackernews pointed out that the algorithm is very
+      close to xxHash one but still it is much faster xxHash
 * Measurements were done on 3 different architecture machines:
   * 4.2 GHz Intel i7-4790K
   * 3.55 GHz Power7
@@ -81,42 +90,51 @@
   * The strings were aligned to see a hashing speed better
   * No constant propagation for string length is forced.  Otherwise,
     the results for MUM hash would be even better
+  * **Update**: Some people complaint that my comparison is unfair
+    as most hash functions are not inlined
+    * I believe that the interface is the part of the implementation.  So when
+      the interface does not provide an easy way for inlining, it is an
+      implementation pitfall
+    * Still to address the complaints I added `-flto` for benchmarking all hash
+      functions excluding MUM.  This option makes cross-file inlining
+    * xxHash64 results became worse for small strings and better for the bulk speed test
+    * All results for other functions improved, sometimes a lot
   
 # Intel i7-4790K (4.2GHz)
 
-|                           |  MUM | City64|  Spooky| xxHash64|SipHash24| 
-:---------------------------|-----:|------:|-------:|--------:|--------:|
-5 bytes  (1,280M strings)   | 7.63s| 10.95s|  10.88s| 19.28s  |   21.61s|
-8 bytes  (1,280M strings)   | 5.52s| 10.83s|  10.35s| 16.22s  |   26.43s|
-16 bytes (1,280M strings)   | 7.38s| 11.15s|  18.29s| 18.07s  |   31.11s|
-32 bytes (1,280M strings)   | 8.06s| 13.15s|  18.50s| 19.06s  |   42.73s|
-64 bytes (1,280M strings)   |11.59s| 13.75s|  26.59s| 25.74s  |   63.38s|
-128 bytes (1,280M strings)  |17.16s| 18.99s|  42.88s| 18.99s  |  106.77s|
-1KB (100M strings)          | 6.61s|  6.37s|   8.80s|  8.45s  |   53.20s|
+|                           |  MUM | City64|  Spooky| xxHash64| Metro64 |SipHash24| 
+:---------------------------|-----:|------:|-------:|--------:|--------:|--------:|
+5 bytes  (1,280M strings)   | 7.82s| 10.80s|   9.22s| 20.51s  |  8.23s  |   21.56s|
+8 bytes  (1,280M strings)   | 5.52s| 10.80s|   7.42s| 20.50s  |  4.88s  |   26.67s|
+16 bytes (1,280M strings)   | 7.45s|  9.42s|  18.29s| 21.29s  |  7.32s  |   25.89s|
+32 bytes (1,280M strings)   | 8.11s| 10.84s|  17.73s| 24.05s  | 13.51s  |   40.43s|
+64 bytes (1,280M strings)   |11.51s| 12.01s|  23.24s| 25.49s  | 14.55s  |   61.75s|
+128 bytes (1,280M strings)  |17.07s| 16.55s|  41.26s| 28.76s  | 16.90s  |  104.97s|
+1KB (100M strings)          | 6.61s|  6.53s|   8.31s|  7.63s  |  6.18s  |   53.86s|
 
 # Power7 (3.55GHz)
 
-|                           | MUM  | City64|  Spooky| xxHash64|SipHash24|
-:---------------------------|-----:|------:|-------:|--------:|--------:|
-5 bytes  (1,280M strings)   |17.59s| 26.01s|  28.52s| 82.54s  |   48.23s|
-8 bytes  (1,280M strings)   | 8.63s| 26.61s|  27.04s| 77.30s  |   55.64s|
-16 bytes (1,280M strings)   |18.30s| 26.07s|  41.77s| 79.51s  |   62.53s|
-32 bytes (1,280M strings)   |19.29s| 30.03s|  41.01s| 76.90s  |   84.89s|
-64 bytes (1,280M strings)   |21.95s| 33.71s|  57.68s| 82.59s  |  122.49s|
-128 bytes (1,280M strings)  |30.20s| 57.68s|  90.56s| 96.09s  |  197.45s|
-1KB (100M strings)          |14.31s| 16.93s|  16.26s| 20.96s  |   96.78s|
+|                           | MUM  | City64|  Spooky| xxHash64| Metro64 |SipHash24|
+:---------------------------|-----:|------:|-------:|--------:|--------:|--------:|
+5 bytes  (1,280M strings)   |17.06s| 26.31s|  21.44s| 47.58s  | 23.21s  |   41.33s|
+8 bytes  (1,280M strings)   | 8.64s| 26.34s|  14.41s| 48.95s  | 10.44s  |   51.19s|
+16 bytes (1,280M strings)   |17.53s| 22.68s|  22.68s| 57.24s  | 15.87s  |   61.50s|
+32 bytes (1,280M strings)   |18.63s| 25.56s|  29.76s| 61.41s  | 26.64s  |   79.15s|
+64 bytes (1,280M strings)   |24.26s| 27.72s|  49.15s| 72.23s  | 28.44s  |  118.20s|
+128 bytes (1,280M strings)  |32.82s| 38.16s|  78.92s| 84.62s  | 31.82s  |  193.42s|
+1KB (100M strings)          | 9.25s| 15.24s|  14.15s| 21,75s  | 11.00s  |   96.38s|
 
 # AARCH64 (APM X-Gene)
 
-|                           | MUM  | City64|  Spooky| xxHash64|SipHash24|
-:---------------------------|-----:|------:|-------:|--------:|--------:|
-5 bytes  (1,280M strings)   |24.06s| 27.27s|  29.41s| 55.08s  |   66.66s|
-8 bytes  (1,280M strings)   |14.43s| 27.27s|  27.80s| 56.69s  |   68.44s|
-16 bytes (1,280M strings)   |22.94s| 28.87s|  43.85s| 62.57s  |   78.08s|
-32 bytes (1,280M strings)   |29.94s| 33.69s|  47.06s| 79.14s  |   98.93s|
-64 bytes (1,280M strings)   |43.83s| 40.64s|  64.70s| 90.38s  |  141.71s|
-128 bytes (1,280M strings)  |70.05s| 74.33s|  98.93s|112.83s  |  235.83s|
-1KB (100M strings)          |34.05s| 22.91s|  24.23s| 33.42s  |  104.98s|
+|                           | MUM  | City64|  Spooky| xxHash64| Metro64 |SipHash24|
+:---------------------------|-----:|------:|-------:|--------:|--------:|--------:|
+5 bytes  (1,280M strings)   |24.06s| 27.27s|  20.85s| 48,46s  | 19.78s  |   53.57s|
+8 bytes  (1,280M strings)   |14.43s| 27.27s|  17.64s| 34.32s  | 13.37s  |   54.54s|
+16 bytes (1,280M strings)   |23.53s| 24.60s|  31.01s| 37.96s  | 19.25s  |   65.24s|
+32 bytes (1,280M strings)   |30.48s| 28.87s|  31.55s| 60.43s  | 36.36s  |   82.35s|
+64 bytes (1,280M strings)   |43.83s| 29.41s|  45.45s| 72.73s  | 38.50s  |  120.85s|
+128 bytes (1,280M strings)  |70.59s| 44.92s|  73.26s| 95.19s  | 43.31s  |  229.94s|
+1KB (100M strings)          |34.05s| 22.27s|  22.85s| 32.50s  | 26.78s  |  111.42s|
 
 # Vectorization
 * A major loop in function `_mum_hash_aligned` could be vectorized
