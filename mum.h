@@ -146,14 +146,18 @@ _mum (uint64_t v, uint64_t p) {
 }
 
 #if defined(_MSC_VER)
+#define _mum_bswap_32(x) _byteswap_uint32_t (x)
 #define _mum_bswap_64(x) _byteswap_uint64_t (x)
 #elif defined(__APPLE__)
 #include <libkern/OSByteOrder.h>
+#define _mum_bswap_32(x) OSSwapInt32 (x)
 #define _mum_bswap_64(x) OSSwapInt64 (x)
 #elif defined(__GNUC__)
+#define _mum_bswap32(x) __builtin_bswap32 (x)
 #define _mum_bswap64(x) __builtin_bswap64 (x)
 #else
 #include <byteswap.h>
+#define _mum_bswap32(x) bswap32 (x)
 #define _mum_bswap64(x) bswap64 (x)
 #endif
 
@@ -167,6 +171,18 @@ _mum_le (uint64_t v) {
 #error "Unknown endianess"
 #endif
 }
+
+static inline uint32_t
+_mum_le32 (uint32_t v) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || !defined(MUM_TARGET_INDEPENDENT_HASH)
+  return v;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  return _mum_bswap32 (v);
+#else
+#error "Unknown endianess"
+#endif
+}
+
 /* Macro defining how many times the most nested loop in
    _mum_hash_aligned will be unrolled by the compiler (although it can
    make an own decision:).  Use only a constant here to help a
@@ -220,31 +236,35 @@ _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   len -= n * sizeof (uint64_t); str += n * sizeof (uint64_t);
   switch (len) {
   case 7:
-    u64 = *(uint32_t *) str << 32;
-    u64 |= *(uint16_t *) (str + 4) << 16;
-    u64 |= str[6] << 8;
-    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+    u64 = _mum_le32 (*(uint32_t *) str);
+    u64 |= (uint64_t) str[4] << 32;
+    u64 |= (uint64_t) str[5] << 40;
+    u64 |= (uint64_t) str[6] << 48;
+    return result ^ _mum (u64, _mum_tail_prime);
   case 6:
-    u64 = *(uint32_t *) str << 32;
-    u64 |= *(uint16_t *) (str + 4) << 16;
-    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+    u64 = _mum_le32 (*(uint32_t *) str);
+    u64 |= (uint64_t) str[4] << 32;
+    u64 |= (uint64_t) str[5] << 40;
+    return result ^ _mum (u64, _mum_tail_prime);
   case 5:
-    u64 = *(uint32_t *) str << 32;
-    u64 |= str[4] << 24;
-    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+    u64 = _mum_le32 (*(uint32_t *) str);
+    u64 |= (uint64_t) str[4] << 32;
+    return result ^ _mum (u64, _mum_tail_prime);
   case 4:
-    u64 = *(uint32_t *) str << 32;
-    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+    u64 = _mum_le32 (*(uint32_t *) str);
+    return result ^ _mum (u64, _mum_tail_prime);
   case 3:
-    u64 = *(uint16_t *) str << 48;
-    u64 |= str[2] << 40;
-    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+    u64 = str[0];
+    u64 |= (uint64_t) str[1] << 8;
+    u64 |= (uint64_t) str[2] << 16;
+    return result ^ _mum (u64, _mum_tail_prime);
   case 2:
-    u64 = *(uint16_t *) str << 48;
-    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+    u64 = str[0];
+    u64 |= (uint64_t) str[1] << 8;
+    return result ^ _mum (u64, _mum_tail_prime);
   case 1:
-    u64 = *str << 56;
-    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+    u64 = str[0];
+    return result ^ _mum (u64, _mum_tail_prime);
   }
   return result;
 }

@@ -1,3 +1,9 @@
+2016-05-13  Vladimir Makarov  <vmakarov@redhat.com>
+
+	* mum.h (_mum_le32): New.
+	(_mum_hash_aligned): Change the code to deal with uint64_t shifts
+	and endianess.
+
 2016-05-12  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Add results for 5-byte string tests.
