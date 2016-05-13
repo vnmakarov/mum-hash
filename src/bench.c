@@ -60,6 +60,15 @@ static void xxHash64_test(const void *key, int len, uint32_t seed, void *out) {
 #define test xxHash64_test
 #define test64 test
 
+#elif defined(METRO)
+
+#include "metro.h"
+static void metro_test(const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *)out = metrohash64_1 ((const uint8_t *)key, len, seed);
+}
+
+#define test metro_test
+#define test64 test
 #elif defined(MUM)
 
 #include "mum.h"
