@@ -1,3 +1,12 @@
+2016-05-12  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Add results for 5-byte string tests.
+	* mum.h (uint16_t): New.
+	(_mum_hash_aligned): Modify code to process a tail < 8 bytes.
+	(_mum_hash_default): Use memmove instead of memcpy.
+	* src/bench.c: Add test for 5-byte strings.
+	* src/bench: Ditto.
+
 2016-05-10  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Highlight the new MUM PRNG speed.

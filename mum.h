@@ -49,6 +49,7 @@
 #include <limits.h>
 
 #ifdef _MSC_VER
+typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
 #else
@@ -196,7 +197,7 @@ static inline uint64_t _MUM_OPTIMIZE("unroll-loops")
 _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   uint64_t result = start;
   const unsigned char *str = (const unsigned char *) key;
-  union {uint64_t i; unsigned char s[sizeof (uint64_t)];} p;
+  uint64_t u64;
   int i;
   size_t n;
   
@@ -217,9 +218,33 @@ _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   for (i = 0; i < n; i++)
     result ^= _mum (_mum_le (((uint64_t *) str)[i]), _mum_primes[i]);
   len -= n * sizeof (uint64_t); str += n * sizeof (uint64_t);
-  if (len) {
-    p.i = 0; memcpy (p.s, str, len);
-    result ^= _mum (_mum_le (((uint64_t *) p.s)[0]), _mum_tail_prime);
+  switch (len) {
+  case 7:
+    u64 = *(uint32_t *) str << 32;
+    u64 |= *(uint16_t *) (str + 4) << 16;
+    u64 |= str[6] << 8;
+    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+  case 6:
+    u64 = *(uint32_t *) str << 32;
+    u64 |= *(uint16_t *) (str + 4) << 16;
+    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+  case 5:
+    u64 = *(uint32_t *) str << 32;
+    u64 |= str[4] << 24;
+    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+  case 4:
+    u64 = *(uint32_t *) str << 32;
+    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+  case 3:
+    u64 = *(uint16_t *) str << 48;
+    u64 |= str[2] << 40;
+    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+  case 2:
+    u64 = *(uint16_t *) str << 48;
+    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
+  case 1:
+    u64 = *str << 56;
+    return result ^ _mum (_mum_le (u64), _mum_tail_prime);
   }
   return result;
 }
@@ -282,7 +307,7 @@ _mum_hash_default (const void *key, size_t len, uint64_t seed) {
   else {
     while (len != 0) {
       block_len = len < _MUM_BLOCK_LEN ? len : _MUM_BLOCK_LEN;
-      memcpy (buf, str, block_len);
+      memmove (buf, str, block_len);
       result = _mum_hash_aligned (result, buf, block_len);
       len -= block_len;
       str += block_len;

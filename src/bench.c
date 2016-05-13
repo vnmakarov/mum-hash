@@ -177,3 +177,20 @@ int main () {
 }
 
 #endif
+
+#ifdef SPEED1
+/* We should use external to prevent optimizations for MUM after
+   inlining.  Otherwise MUM results will be too good.  */
+int len = 5;
+#include <stdlib.h>
+#include <stdio.h>
+int main () {
+  int i, j; uint64_t k = rand (); uint64_t out;
+  
+  for (j = 0; j < 128; j++)
+    for (i = 0; i < 10000000; i++)
+      test (&k, len, 2, &out), k = out;
+  printf ("5-byte: %s:%llx\n", (size_t)&k & 0x7 ? "unaligned" : "aligned", k);
+  return 0;
+}
+#endif
