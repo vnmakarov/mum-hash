@@ -58,7 +58,7 @@
     was added
     
    
-# MUM benchmarking vs Spooky, City64, and SipHash24
+# MUM benchmarking vs Spooky, City64, xxHash64, MetroHash64, and SipHash24
 
 * Here are the results of benchmarking MUM and the fastest
   non-cryptographic hash functions I know:
@@ -98,7 +98,7 @@
     * Still to address the complaints I added `-flto` for benchmarking all hash
       functions excluding MUM.  This option makes cross-file inlining
     * xxHash64 results became worse for small strings and better for the bulk speed test
-    * All results for other functions improved, sometimes a lot
+    * All results for other functions improved, sometimes quite a lot
   
 # Intel i7-4790K (4.2GHz)
 
