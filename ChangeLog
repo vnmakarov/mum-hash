@@ -1,4 +1,8 @@
 2016-05-13  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Some minor changes.
+
+2016-05-13  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 	    Vsevolod Stakhov  <vsevolod@highsecure.ru>
 
 	* src/bench.c: Include test for metro hash.
