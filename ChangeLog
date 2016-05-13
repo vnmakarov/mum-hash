@@ -1,8 +1,19 @@
+2016-05-13  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+	    Vsevolod Stakhov  <vsevolod@highsecure.ru>
+
+	* src/bench.c: Include test for metro hash.
+	* src/bench (COPTFLAGS, CC, CXX, LTO): New.  Use them.  Add runs for
+	metro hash.
+	* README.md: Update benchmark results, add results for MetroHash.
+	* metrohash64.cpp: New.
+	* metrohash64.h: New.
+	* platform.h: New.
+
 2016-05-13  Vsevolod Stakhov  <vsevolod@highsecure.ru>
 
 	* mum.h: Add support for LLVM.
 
-2016-05-13  Vladimir Makarov  <vmakarov@redhat.com>
+2016-05-13  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* mum.h (_mum_le32): New.
 	(_mum_hash_aligned): Change the code to deal with uint64_t shifts
