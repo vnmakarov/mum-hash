@@ -28,7 +28,7 @@ static void siphash_test (const void * key, int len, uint32_t seed, void * out) 
   uint64_t s[2];
 
   s[0] = seed; s[1] = 0;
-  siphash(out, (const uint8_t *) key, len, (const uint8_t *) s);
+  siphash((uint8_t *)out, (const uint8_t *) key, len, (const uint8_t *) s);
 }
 
 #define test siphash_test
@@ -43,14 +43,18 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 #endif
 
-#include "xxhash.h"
+#include "xxhash.c"
 static XXH64_state_t* state = NULL;
 
 static void xxHash64_test(const void *key, int len, uint32_t seed, void *out) {
+#if 0
   if (! state) state = XXH64_createState ();
   XXH64_reset (state, seed);
   XXH64_update (state, key, len);
   *(uint64_t*)out = XXH64_digest (state);
+#else
+  *(uint64_t*)out = XXH64 (key, len, seed);
+#endif
 }
 
 #define test xxHash64_test
