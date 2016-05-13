@@ -1,3 +1,7 @@
+2016-05-13  Vsevolod Stakhov  <vsevolod@highsecure.ru>
+
+	* mum.h: Add support for LLVM.
+
 2016-05-13  Vladimir Makarov  <vmakarov@redhat.com>
 
 	* mum.h (_mum_le32): New.
