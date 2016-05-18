@@ -89,6 +89,10 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 
+#if defined(__GNUC__) && ((__GNUC__ == 4) &&  (__GNUC_MINOR__ >= 9) || (__GNUC__ > 4))
+#define _MC_FRESH_GCC
+#endif
+
 #if _MC_USE_INT128
 typedef __uint128_t _mc_ti;
 #else
@@ -450,7 +454,7 @@ _mc_init_state (_mc_ti state[4], uint64_t seed[4], size_t len) {
   state[3] = _mc_const (SEED_PRIME5, SEED_PRIME6);
 }
 
-#if defined(__x86_64__) && defined(__GNUC__)
+#if defined(__x86_64__) && defined(_MC_FRESH_GCC)
 
 /* We want to use AVX2 insn MULX instead of generic x86-64 MULQ where
    it is possible.  Although on modern Intel processors MULQ takes
@@ -527,7 +531,7 @@ _mc_hash_default (const void *data, size_t len, uint64_t seed[4], unsigned char 
 /* Hash DATA of length LEN and SEED.  */
 static inline void
 mum512_keyed_hash (const void *data, size_t len, const uint64_t key[4], unsigned char *out) {
-#if defined(__x86_64__) && defined(__GNUC__)
+#if defined(__x86_64__) && defined(_MC_FRESH_GCC)
   static int avx2_support = 0;
   
   if (avx2_support > 0) {

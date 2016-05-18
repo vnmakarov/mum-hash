@@ -56,16 +56,20 @@
 #define EXPECT(cond, v) (cond)
 #endif
 
+#if defined(__GNUC__) && ((__GNUC__ == 4) &&  (__GNUC_MINOR__ >= 9) || (__GNUC__ > 4))
+#define _MUM_PRNG_FRESH_GCC
+#endif
+
 static struct {
   int count; 
-#if defined(__x86_64__) && defined(__GNUC__)
+#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
   int avx2_support;
 #endif
   /* MUM PRNG state */
   uint64_t state[MUM_PRNG_UNROLL]; 
 } _mum_prng_state;
 
-#if defined(__x86_64__) && defined(__GNUC__)
+#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
 static inline void
 _mum_prng_setup_avx2 (void) {
   __builtin_cpu_init ();
@@ -80,7 +84,7 @@ _start_mum_prng (uint32_t seed) {
   _mum_prng_state.count = MUM_PRNG_UNROLL;
   for (i = 0; i < MUM_PRNG_UNROLL; i++)
     _mum_prng_state.state[i] = seed + 1;
-#if defined(__x86_64__) && defined(__GNUC__)
+#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
   _mum_prng_setup_avx2 ();
 #endif
 }
@@ -95,7 +99,7 @@ set_mum_prng_seed (uint32_t seed) {
   _start_mum_prng (seed);
 }
 
-#if defined(__x86_64__) && defined(__GNUC__)
+#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
 static void _MUM_TARGET("arch=haswell")
 _mum_prng_update_avx2 (void) {
   int i;
@@ -117,7 +121,7 @@ _mum_prng_update (void) {
 static inline uint64_t
 get_mum_prn (void) {
   if (EXPECT (_mum_prng_state.count == MUM_PRNG_UNROLL, 0)) {
-#if defined(__x86_64__) && defined(__GNUC__)
+#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
     if (EXPECT (_mum_prng_state.avx2_support, 1)) {
       _mum_prng_update_avx2 ();
       return _mum_prng_state.state[_mum_prng_state.count++];

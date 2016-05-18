@@ -58,13 +58,8 @@ typedef unsigned __int64 uint64_t;
 
 #ifdef __GNUC__
 #define _MUM_ATTRIBUTE_UNUSED  __attribute__((unused))
-#ifndef __clang__
 #define _MUM_OPTIMIZE(opts) __attribute__((__optimize__ (opts)))
 #define _MUM_TARGET(opts) __attribute__((__target__ (opts)))
-#else
-#define _MUM_OPTIMIZE(opts)
-#define _MUM_TARGET(opts)
-#endif
 #else
 #define _MUM_ATTRIBUTE_UNUSED
 #define _MUM_OPTIMIZE(opts)
@@ -84,6 +79,9 @@ typedef unsigned __int64 uint64_t;
 #endif
 #endif
 
+#if defined(__GNUC__) && ((__GNUC__ == 4) &&  (__GNUC_MINOR__ >= 9) || (__GNUC__ > 4))
+#define _MUM_FRESH_GCC
+#endif
 
 /* Here are different primes randomly generated with the equal
    probability of their bit values.  They are used to randomize input
@@ -282,7 +280,7 @@ _mum_final (uint64_t h) {
   return h;
 }
 
-#if defined(__x86_64__) && defined(__GNUC__)
+#if defined(__x86_64__) && defined(_MUM_FRESH_GCC)
 
 /* We want to use AVX2 insn MULX instead of generic x86-64 MULQ where
    it is possible.  Although on modern Intel processors MULQ takes
@@ -400,7 +398,7 @@ mum_hash64 (uint64_t key, uint64_t seed) {
    target endianess and the unroll factor.  */
 static inline uint64_t
 mum_hash (const void *key, size_t len, uint64_t seed) {
-#if defined(__x86_64__) && defined(__GNUC__) && !defined(__clang__)
+#if defined(__x86_64__) && defined(_MUM_FRESH_GCC)
   static int avx2_support = 0;
 
   if (avx2_support > 0)

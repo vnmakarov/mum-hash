@@ -1,4 +1,13 @@
 2016-05-18  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+	    Vsevolod Stakhov  <vsevolod@highsecure.ru>
+
+	* mum512.h (_MC_FRESH_GCC): New. Use it as a guard for avx2 version.
+	* mum-prng.h (_MUM_PRNG_FRESH_GCC): New. Use it as a guard for
+	avx2 version.
+	* mum.h (_MUM_FRESH_GCC): New. Use it as a guard for avx2 version.
+	Remove clang guard for _MUM_OPTIMIZE etc.
+
+2016-05-18  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* src/mum-prng.h: Move it to parent directory
 
