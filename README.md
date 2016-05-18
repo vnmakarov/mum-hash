@@ -104,7 +104,7 @@
 
 |                           |  MUM | City64|  Spooky| xxHash64| Metro64 |SipHash24| 
 :---------------------------|-----:|------:|-------:|--------:|--------:|--------:|
-5 bytes  (1,280M strings)   | 7.82s| 10.80s|   9.22s| 20.51s  |  8.23s  |   21.56s|
+5 bytes  (1,280M strings)   | 7.74s| 10.80s|   9.22s| 20.51s  |  8.23s  |   21.56s|
 8 bytes  (1,280M strings)   | 5.52s| 10.80s|   7.42s| 20.50s  |  4.88s  |   26.67s|
 16 bytes (1,280M strings)   | 7.45s|  9.42s|  18.29s| 21.29s  |  7.32s  |   25.89s|
 32 bytes (1,280M strings)   | 8.11s| 10.84s|  17.73s| 24.05s  | 13.51s  |   40.43s|
@@ -237,13 +237,13 @@ sh bench
 :------------------------|-------:|------:|-------:|
 10 bytes (20 M texts)    | 0.73s  | 0.65s |  1.13s |
 100 bytes (20 M texts)   | 1.08s  | 0.65s |  2.21s |
-1000 bytes (20 M texts)  | 4.01s  | 4.82s |  15.3s |
-10000 bytes (5 M texts)  | 7.86s  |11.74s |  37.3s |
+1000 bytes (20 M texts)  | 3.90s  | 4.82s |  15.3s |
+10000 bytes (5 M texts)  | 7.96s  |11.74s |  37.3s |
 
 # Pseudo-random generators
   * Files `mum-prgn.h` and `mum512-prng.h` provides pseudo-random
     functions based on MUM and MUM512 hash functions
-  * All PRNGs pass *NIST Statistical Test Suite for Random and
+  * All PRNGs passed *NIST Statistical Test Suite for Random and
     Pseudorandom Number Generators for Cryptographic Applications*
     (version 2.2.1) with 1000 bitstreams each containing 1M bits
     * Although MUM PRNG pass the test, it is not a cryptographically
@@ -263,7 +263,9 @@ sh bench
     to speedup MUM PRNG
     * I added code to calculate a few PRNs at once to calculate them in parallel
     * I added AVX2 version functions to use faster `MULX` instruction
-    * The new version also passes NIST Statistical Test Suite
+    * The new version also passed NIST Statistical Test Suite.  It was
+      tested even on bigger data (10K bitstreams each containing 10M
+      bits).  The test took several days on i7-4790K
     * The new version is **almost 2 times** faster the old one and MUM PRN
       speed became almost the same as xoroshiro128+ one
       * xoroshiro128+ and MUM PRNG functions are inlined in the benchmark program
