@@ -1,4 +1,9 @@
 2016-05-18  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Update speed data for MUM and MUM512 and add info
+	about testing MUM PRNG on NIST bigger data.
+
+2016-05-18  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 	    Vsevolod Stakhov  <vsevolod@highsecure.ru>
 
 	* mum512.h (_MC_FRESH_GCC): New. Use it as a guard for avx2 version.
