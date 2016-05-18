@@ -1,3 +1,7 @@
+2016-05-18  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* src/mum-prng.h: Move it to parent directory
+
 2016-05-13  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Some minor changes.
