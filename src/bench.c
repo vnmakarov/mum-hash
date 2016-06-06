@@ -47,10 +47,7 @@ typedef unsigned __int64 uint64_t;
 static XXH64_state_t* state = NULL;
 
 static void xxHash64_test(const void *key, int len, uint32_t seed, void *out) {
-  if (! state) state = XXH64_createState ();
-  XXH64_reset (state, seed);
-  XXH64_update (state, key, len);
-  *(uint64_t*)out = XXH64_digest (state);
+  *(uint64_t*)out = XXH64 (key, len, seed);
 }
 
 #define test xxHash64_test

@@ -1,3 +1,8 @@
+2016-06-06  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* src/bench.c: Use faster interface for xxHash.
+	* README.md: Update xxHash speed numbers for x86-64 and ppc64.
+
 2016-05-18  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Update speed data for MUM and MUM512 and add info
