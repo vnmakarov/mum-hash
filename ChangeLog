@@ -1,3 +1,7 @@
+2016-06-07  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Update speed numbers for all functions for aarch64.
+
 2016-06-06  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* src/bench.c: Use faster interface for xxHash.
