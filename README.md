@@ -128,13 +128,13 @@
 
 |                           | MUM  | City64|  Spooky| xxHash64| Metro64 |SipHash24|
 :---------------------------|-----:|------:|-------:|--------:|--------:|--------:|
-5 bytes  (1,280M strings)   |24.06s| 27.27s|  20.85s| 48,46s  | 19.78s  |   53.57s|
-8 bytes  (1,280M strings)   |14.43s| 27.27s|  17.64s| 34.32s  | 13.37s  |   54.54s|
-16 bytes (1,280M strings)   |23.53s| 24.60s|  31.01s| 37.96s  | 19.25s  |   65.24s|
-32 bytes (1,280M strings)   |30.48s| 28.87s|  31.55s| 60.43s  | 36.36s  |   82.35s|
-64 bytes (1,280M strings)   |43.83s| 29.41s|  45.45s| 72.73s  | 38.50s  |  120.85s|
-128 bytes (1,280M strings)  |70.59s| 44.92s|  73.26s| 95.19s  | 43.31s  |  229.94s|
-1KB (100M strings)          |34.05s| 22.27s|  22.85s| 32.50s  | 26.78s  |  111.42s|
+5 bytes  (1,280M strings)   |22.40s| 27.21s|  21.34s| 27.21s  | 19.73s  |   54.41s|
+8 bytes  (1,280M strings)   |15.47s| 27.21s|  17.60s| 25.07s  | 13.87s  |   67.22s|
+16 bytes (1,280M strings)   |22.40s| 24.54s|  32.54s| 48.55s  | 19.20s  |   83.23s|
+32 bytes (1,280M strings)   |30.41s| 28.81s|  33.07s| 61.65s  | 36.27s  |  118.97s|
+64 bytes (1,280M strings)   |47.48s| 32.01s|  56.02s| 76.82s  | 37.88s  |  186.73s|
+128 bytes (1,280M strings)  |80.56s| 45.88s|  91.23s|107.23s  | 42.14s  |  331.94s|
+1KB (100M strings)          |38.39s| 24.51s|  22.55s| 44.85s  | 29.59s  |  170.01s|
 
 # Vectorization
 * A major loop in function `_mum_hash_aligned` could be vectorized
