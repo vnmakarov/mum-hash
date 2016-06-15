@@ -231,14 +231,17 @@ sh bench
   * To compare the MUM512 speed with the speed of SHA-2 (SHA512) and
     SHA-3 (SHA3-512) go to the directory `src` and run a script `sh bench-crypto`
     * SHA-2 and SHA-3 code is taken from [RHash](https://github.com/rhash/RHash.git)
+  * **Update**: Blake2 crypto-hash from
+    [github.com/BLAKE2/BLAKE2](https://github.com/BLAKE2/BLAKE2) was added
+    for comparison.  I use sse version of 64-bit Blake2 (blake2b).
   * Here is the speed of the crypto hash functions on 4.2 GHz Intel i7-4790K:
 
-|                        | MUM512 | SHA2  |  SHA3  |
-:------------------------|-------:|------:|-------:|
-10 bytes (20 M texts)    | 0.73s  | 0.65s |  1.13s |
-100 bytes (20 M texts)   | 1.08s  | 0.65s |  2.21s |
-1000 bytes (20 M texts)  | 3.90s  | 4.82s |  15.3s |
-10000 bytes (5 M texts)  | 7.96s  |11.74s |  37.3s |
+|                        | MUM512 | SHA2  |  SHA3  | Blake2B|
+:------------------------|-------:|------:|-------:|-------:|
+10 bytes (20 M texts)    | 0.73s  | 0.65s |  1.13s |  0.80s |
+100 bytes (20 M texts)   | 1.08s  | 0.65s |  2.21s |  0.81s |
+1000 bytes (20 M texts)  | 3.90s  | 4.82s |  15.3s |  3.31s |
+10000 bytes (5 M texts)  | 7.96s  |11.74s |  37.3s |  7.27s |
 
 # Pseudo-random generators
   * Files `mum-prgn.h` and `mum512-prng.h` provides pseudo-random

@@ -24,6 +24,16 @@ void sha3_512_test (const void *msg, int len, void *out) {
 
 #define test sha3_512_test
 
+#elif defined(BLAKE2B)
+
+#include "blake2.h"
+void blake2b_test (const void *msg, int len, void *out) {
+  static const uint64_t key[4] = {0, 0, 0, 0};
+  blake2b ((uint8_t *) out, msg, key, 64, len, 32);
+}
+
+#define test blake2b_test
+
 #elif defined(MUM512)
 
 #include "mum512.h"
