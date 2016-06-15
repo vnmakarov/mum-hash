@@ -1,8 +1,17 @@
+2016-06-14  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Add results for Blake2.
+	* src/{blake2b.c, blake2b-load-sse2.h, blake2b-load-sse41.h}: New.
+	* src/{blake2b-round.h, blake2-config.h, blake2.h, blake2-impl.h}:
+	New.
+	* src/bench-crypto.c: Add code for testing Blake2.
+	* src/bench-crypto: Ditto.
+
 2016-06-07  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Update speed numbers for all functions for aarch64.
 
-2016-06-06  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+y2016-06-06  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* src/bench.c: Use faster interface for xxHash.
 	* README.md: Update xxHash speed numbers for x86-64 and ppc64.
