@@ -350,8 +350,8 @@ _mc_hash_aligned (_mc_ti state[4], const void *data, size_t len) {
   _mc_ti result[4];
   const unsigned char *str = (const unsigned char *) data;
   union {_mc_ti i; unsigned char s[sizeof (_mc_ti)];} p;
-  int i, j;
-  size_t n;
+  int j;
+  size_t i, n;
   
   for (i = 0; i < 4; i++)
     result[i] = _mc_mum (state[i], _mc_get (_mc_block_start_primes[i]));
@@ -447,7 +447,7 @@ _mc_mix (_mc_ti state[4], uint64_t out[8]) {
 #define SEED_PRIME6 0x7b51ec3d22f7096fULL
 
 static inline void
-_mc_init_state (_mc_ti state[4], uint64_t seed[4], size_t len) {
+_mc_init_state (_mc_ti state[4], const uint64_t seed[4], size_t len) {
   state[0] = _mc_const (seed[0] ^ SEED_PRIME0, seed[1] ^ SEED_PRIME1);
   state[1] = _mc_const (seed[2] ^ SEED_PRIME2, seed[3] ^ SEED_PRIME3);
   state[2] = _mc_const (len, SEED_PRIME4);
@@ -461,7 +461,7 @@ _mc_init_state (_mc_ti state[4], uint64_t seed[4], size_t len) {
    3-cycles vs. 4 for MULX, MULX permits more freedom in insn
    scheduling as it uses less fixed registers.  */
 static inline void _MC_TARGET("arch=haswell")
-_mc_hash_avx2 (const void * data, size_t len, uint64_t seed[4], unsigned char *out) {
+_mc_hash_avx2 (const void * data, size_t len, const uint64_t seed[4], unsigned char *out) {
   _mc_ti state[4];
   
   _mc_init_state (state, seed, len);
@@ -497,7 +497,7 @@ static inline void
 #if defined(__x86_64__)
 _MC_TARGET("inline-all-stringops")
 #endif
-_mc_hash_default (const void *data, size_t len, uint64_t seed[4], unsigned char *out) {
+_mc_hash_default (const void *data, size_t len, const uint64_t seed[4], unsigned char *out) {
   _mc_ti state[4];
   const unsigned char *str = (const unsigned char *) data;
   size_t block_len;

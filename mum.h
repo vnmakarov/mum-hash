@@ -217,7 +217,7 @@ _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   uint64_t result = start;
   const unsigned char *str = (const unsigned char *) key;
   uint64_t u64;
-  int i;
+  size_t i;
   size_t n;
   
   result = _mum (result, _mum_block_start_prime);
@@ -354,7 +354,7 @@ _mum_next_factor (void) {
 /* Set random multiplicators depending on SEED.  */
 static inline void
 mum_hash_randomize (uint64_t seed) {
-  int i;
+  size_t i;
 
   srand (seed);
   _mum_hash_step_prime = _mum_next_factor ();

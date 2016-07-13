@@ -1,3 +1,11 @@
+2016-07-13  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* mum.h (_mum_hash_aligned, mum_hash_randomize): Make i type of
+	size_t.
+	* mum512.h (_mc_hash_aligned): Ditto.
+	(_mc_init_state, _mc_hash_avx2, _mc_hash_default): Use cont for
+	seed.
+
 2016-06-14  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Add results for Blake2.
