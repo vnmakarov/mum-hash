@@ -296,7 +296,7 @@ _mum_hash_avx2 (const void * key, size_t len, uint64_t seed) {
 #if defined(__x86_64__) || defined(__i386__) || defined(__PPC64__) \
     || defined(__s390__) || defined(__m32c__) || defined(cris)     \
     || defined(__CR16__) || defined(__vax__) || defined(__m68k__) \
-    || defined(__aarch64__)
+    || defined(__aarch64__) || defined(_M_AMD64) || defined(_M_IX86)
 #define _MUM_UNALIGNED_ACCESS 1
 #else
 #define _MUM_UNALIGNED_ACCESS 0
