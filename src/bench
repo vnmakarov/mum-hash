@@ -26,13 +26,13 @@ echo compiling metrohash64
 ${CXX} ${COPTFLAGS} ${LTO} -w -c metrohash64.cpp || exit 1
 
 echo compiling SipHash24
-${CXX} ${COPTFLAGS} ${LTO} -w -c siphash24.c || exit 1
+${CC} ${COPTFLAGS} ${LTO} -w -c siphash24.c || exit 1
 
 echo +++5-byte speed '(1,280M keys)':
 ${CXX} -DSPEED1 ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
 ${CXX} -DSPEED1 ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
 ${CXX} -DSPEED1 ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash xxhash.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
-${CXX} -DSPEED1 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+${CC} -DSPEED1 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
 ${CXX} -DSPEED1 ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "Metro    :" $temp
 # Don't do LTO for MUM.  Otherwise it will be optimized too much and results will be too good on some targets
 ${CXX} -DSPEED1 ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
@@ -41,7 +41,7 @@ echo +++8-byte speed '(1,280M keys)':
 ${CXX} -DSPEED2 ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
 ${CXX} -DSPEED2 ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
 ${CXX} -DSPEED2 ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash xxhash.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
-${CXX} -DSPEED2 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+${CC} -DSPEED2 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
 ${CXX} -DSPEED2 ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "Metro    :" $temp
 ${CXX} -DSPEED2 ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
 
@@ -49,7 +49,7 @@ echo +++16-byte speed '(1,280M keys)':
 ${CXX} -DSPEED3 ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
 ${CXX} -DSPEED3 ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
 ${CXX} -DSPEED3 ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash xxhash.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
-${CXX} -DSPEED3 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+${CC} -DSPEED3 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
 ${CXX} -DSPEED3 ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "Metro    :" $temp
 ${CXX} -DSPEED3 ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
 
@@ -57,7 +57,7 @@ echo +++32-byte speed '(1,280M keys)':
 ${CXX} -DSPEED4 ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
 ${CXX} -DSPEED4 ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
 ${CXX} -DSPEED4 ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash xxhash.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
-${CXX} -DSPEED4 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+${CC} -DSPEED4 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
 ${CXX} -DSPEED4 ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "Metro    :" $temp
 ${CXX} -DSPEED4 ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
 
@@ -65,7 +65,7 @@ echo +++64-byte speed '(1,280M keys)':
 ${CXX} -DSPEED5 ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
 ${CXX} -DSPEED5 ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
 ${CXX} -DSPEED5 ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash xxhash.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
-${CXX} -DSPEED5 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+${CC} -DSPEED5 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
 ${CXX} -DSPEED5 ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "Metro    :" $temp
 ${CXX} -DSPEED5 ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
 
@@ -73,7 +73,7 @@ echo +++128-byte speed '(1,280M keys)':
 ${CXX} -DSPEED6 ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
 ${CXX} -DSPEED6 ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
 ${CXX} -DSPEED6 ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash xxhash.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
-${CXX} -DSPEED6 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+${CC} -DSPEED6 ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
 ${CXX} -DSPEED6 ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "Metro    :" $temp
 ${CXX} -DSPEED6 ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
 
@@ -81,7 +81,7 @@ echo +++Bulk speed 1KB '(100M keys)':
 ${CXX} -DSPEED ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
 ${CXX} -DSPEED ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
 ${CXX} -DSPEED ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash xxhash.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
-${CXX} -DSPEED ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
+${CC} -DSPEED ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
 ${CXX} -DSPEED ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "Metro    :" $temp
 ${CXX} -DSPEED ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM      :" $temp
 

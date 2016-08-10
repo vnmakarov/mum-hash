@@ -1,3 +1,11 @@
+2016-08-10  Aras Pranckevičius <nearaz@gmail.com>
+	    Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* mum.h: Permit unaligned access for _M_AMD64 and _M_IX86
+	(Windows).
+	* mum512.h: Ditto.
+	* bench: Use CC instead of CXX for siphash.
+
 2016-07-13  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* mum.h (_mum_hash_aligned, mum_hash_randomize): Make i type of
