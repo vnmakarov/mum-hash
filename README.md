@@ -244,7 +244,7 @@ sh bench
 10000 bytes (5 M texts)  | 7.96s  |11.74s |  37.3s |  7.27s |
 
 # Pseudo-random generators
-  * Files `mum-prgn.h` and `mum512-prng.h` provides pseudo-random
+  * Files `mum-prng.h` and `mum512-prng.h` provides pseudo-random
     functions based on MUM and MUM512 hash functions
   * All PRNGs passed *NIST Statistical Test Suite for Random and
     Pseudorandom Number Generators for Cryptographic Applications*
