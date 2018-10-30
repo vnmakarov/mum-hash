@@ -62,6 +62,28 @@ static void metro_test(const void *key, int len, uint32_t seed, void *out) {
 
 #define test metro_test
 #define test64 test
+
+#elif defined(MeowHash)
+
+#ifdef _MSC_VER
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+#include <stdint.h>
+#endif
+
+#include <emmintrin.h>
+#include <wmmintrin.h>
+#include "meow_hash.h"
+
+static void meowhash_test(const void *key, int len, uint32_t seed, void *out) {
+  meow_lane Hash = MeowHash1(seed, len, key);
+  *(uint64_t*)out = Hash.Sub[0];
+}
+
+#define test meowhash_test
+#define test64 test
+
 #elif defined(MUM)
 
 #include "mum.h"
@@ -84,14 +106,15 @@ static void mum_test64(const void *key, int len, uint32_t seed, void *out) {
 #ifdef SPEED
 #include <stdlib.h>
 #include <stdio.h>
+uint32_t arr[16 * 256 * 1024];
 int main () {
-  int i; uint32_t arr[256]; uint64_t out;
+  int i; uint64_t out;
   
-  for (i = 0; i < 256; i++) {
+  for (i = 0; i < 16 * 256 * 1024; i++) {
     arr[i] = rand ();
   }
-  for (i = 0; i < 100000000; i++)
-    test (arr, 256 * 4, 2, &out), arr[0] = out;
+  for (i = 0; i < 10000; i++)
+    test (arr, 16 * 256 * 1024 * 4, 2, &out), arr[0] = out;
   printf ("%s:%llx\n", (size_t)arr & 0x7 ? "unaligned" : "aligned", out);
   return 0;
 }

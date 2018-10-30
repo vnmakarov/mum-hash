@@ -1,3 +1,19 @@
+2018-10-30  Vladimir Makarov  <vmakarov@redhat.com>
+
+	* README.md: Descrition of new version of mum-hash.  New results
+	for modern CPUs.
+	* mum-hash (_MUM_FRESH_GCC): Remove.
+	(_mum_rotl): New.
+	(_mum_hash_aligned, _mum_final): Add new version.  Use MUM_V1 for
+	the old code.
+	(_mum_hash_avx2): Remove.
+	(_mum_hash_default, mum_hash): Modify and simplify.
+	* bench: Use environment variable MUM_ONLY for runing mum-hash
+	only.  Add Meow Hash runs.  Use 16MB keys instead of 1KB ones.
+	* bench.c (meowhash_test): New.
+	(main): Use 16MB keys instead of 1KB ones.
+	* meow_hash.h: New.
+
 2016-08-10  Aras Pranckevičius <nearaz@gmail.com>
 	    Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
