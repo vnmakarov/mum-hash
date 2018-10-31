@@ -1,4 +1,5 @@
-/* Copyright (c) 2016 Vladimir Makarov <vmakarov@gcc.gnu.org>
+/* Copyright (c) 2016, 2017, 2018
+   Vladimir Makarov <vmakarov@gcc.gnu.org>
 
    Permission is hereby granted, free of charge, to any person
    obtaining a copy of this software and associated documentation
@@ -88,10 +89,6 @@ typedef unsigned __int64 uint64_t;
 #define _MC_TARGET(opts)
 #endif
 
-
-#if defined(__GNUC__) && ((__GNUC__ == 4) &&  (__GNUC_MINOR__ >= 9) || (__GNUC__ > 4))
-#define _MC_FRESH_GCC
-#endif
 
 #if _MC_USE_INT128
 typedef __uint128_t _mc_ti;
@@ -454,22 +451,6 @@ _mc_init_state (_mc_ti state[4], const uint64_t seed[4], size_t len) {
   state[3] = _mc_const (SEED_PRIME5, SEED_PRIME6);
 }
 
-#if defined(__x86_64__) && defined(_MC_FRESH_GCC)
-
-/* We want to use AVX2 insn MULX instead of generic x86-64 MULQ where
-   it is possible.  Although on modern Intel processors MULQ takes
-   3-cycles vs. 4 for MULX, MULX permits more freedom in insn
-   scheduling as it uses less fixed registers.  */
-static inline void _MC_TARGET("arch=haswell")
-_mc_hash_avx2 (const void * data, size_t len, const uint64_t seed[4], unsigned char *out) {
-  _mc_ti state[4];
-  
-  _mc_init_state (state, seed, len);
-  _mc_hash_aligned (state, data, len);
-  _mc_mix (state, (uint64_t *) out);
-}
-#endif
-
 #ifndef _MC_UNALIGNED_ACCESS
 #if defined(__x86_64__) || defined(__i386__) || defined(__PPC64__) \
     || defined(__s390__) || defined(__m32c__) || defined(cris)     \
@@ -504,7 +485,7 @@ _mc_hash_default (const void *data, size_t len, const uint64_t seed[4], unsigned
   _mc_ti buf[_MC_BLOCK_LEN_POW2 / sizeof (_mc_ti)];
   
   _mc_init_state (state, seed, len);
-  if (_MC_UNALIGNED_ACCESS || ((size_t) str & 0x7) == 0)
+  if (((size_t) str & 0x7) == 0)
     _mc_hash_aligned (state, data, len);
   else {
     while (len != 0) {
@@ -516,7 +497,7 @@ _mc_hash_default (const void *data, size_t len, const uint64_t seed[4], unsigned
       str += block_len;
     }
   }
-  if (_MC_UNALIGNED_ACCESS || ((size_t) out & 0x7) == 0)
+  if (((size_t) out & 0x7) == 0)
     _mc_mix (state, (uint64_t *) out);
   else {
     uint64_t ui64[8];
@@ -531,23 +512,16 @@ _mc_hash_default (const void *data, size_t len, const uint64_t seed[4], unsigned
 /* Hash DATA of length LEN and SEED.  */
 static inline void
 mum512_keyed_hash (const void *data, size_t len, const uint64_t key[4], unsigned char *out) {
-#if defined(__x86_64__) && defined(_MC_FRESH_GCC)
-  static int avx2_support = 0;
+#if _MC_UNALIGNED_ACCESS
+  _mc_ti state[4];
   
-  if (avx2_support > 0) {
-    _mc_hash_avx2 (data, len, key, out);
-    return;
-  }
-  else if (! avx2_support) {
-    __builtin_cpu_init ();
-    avx2_support =  __builtin_cpu_supports ("avx2") ? 1 : -1;
-    if (avx2_support > 0) {
-      _mc_hash_avx2 (data, len, key, out);
-      return;
-    }
-  }
-#endif
+  _mc_init_state (state, key, len);
+  _mc_hash_aligned (state, data, len);
+  _mc_mix (state, (uint64_t *) out);
+  return;
+#else
   _mc_hash_default (data, len, key, out);
+#endif
 }
 
 /* Hash DATA of length LEN.  */

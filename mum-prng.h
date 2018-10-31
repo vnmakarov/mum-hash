@@ -1,4 +1,5 @@
-/* Copyright (c) 2016 Vladimir Makarov <vmakarov@gcc.gnu.org>
+/* Copyright (c) 2016, 2017, 2018
+   Vladimir Makarov <vmakarov@gcc.gnu.org>
 
    Permission is hereby granted, free of charge, to any person
    obtaining a copy of this software and associated documentation
@@ -100,13 +101,23 @@ set_mum_prng_seed (uint32_t seed) {
 }
 
 #if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
+/* This code specialized for Haswell generates MULX insns. */
+static inline uint64_t _MUM_TARGET("arch=haswell")
+_mum_avx2 (uint64_t v, uint64_t p) {
+  uint64_t hi, lo;
+  __uint128_t r = (__uint128_t) v * (__uint128_t) p;
+  hi = (uint64_t) (r >> 64);
+  lo = (uint64_t) r;
+  return hi + lo;
+}
+
 static void _MUM_TARGET("arch=haswell")
 _mum_prng_update_avx2 (void) {
   int i;
 
   _mum_prng_state.count = 0;
   for (i = 0; i < MUM_PRNG_UNROLL; i++)
-    _mum_prng_state.state[i] ^= _mum (_mum_prng_state.state[i], _mum_primes[i]);
+    _mum_prng_state.state[i] ^= _mum_avx2 (_mum_prng_state.state[i], _mum_primes[i]);
 }
 #endif
 

@@ -1,3 +1,18 @@
+2018-10-31  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Update for PRNGs and MUM-512.
+	* mum-512.h (_MC_FRESH_GCC, _mc_hash_avx2): Removed.
+	(_mc_hash_default): Don't check _MC_UNALIGNED_ACCESS.
+	(mum512_keyed_hash): Remove avx2 probe.  Use _mc_hash_aligned.
+	* mum-prng.h (_mum_avx2): New.
+	(_mum_prng_update_avx2): Use it.
+	* src/bench-prng: Add new xo[ro]shiro tests.
+	* src/bench-prng.c: Ditto.  Add code for PRNs output.
+	* src/xoroshiro128plus.c, src/xoroshiro128starstar.c:  New files.
+	* src/xoshiro256plus.c, src/xoshiro256starstar.c: New files.
+	* src/xoshiro512plus.c, src/xoshiro512starstar.c: New files.
+	* src/splitmix64.c, src/xoseed.c: New files.
+
 2018-10-30  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Descrition of new version of mum-hash.  New results
@@ -8,9 +23,9 @@
 	the old code.
 	(_mum_hash_avx2): Remove.
 	(_mum_hash_default, mum_hash): Modify and simplify.
-	* bench: Use environment variable MUM_ONLY for runing mum-hash
+	* src/bench: Use environment variable MUM_ONLY for runing mum-hash
 	only.  Add Meow Hash runs.  Use 16MB keys instead of 1KB ones.
-	* bench.c (meowhash_test): New.
+	* src/bench.c (meowhash_test): New.
 	(main): Use 16MB keys instead of 1KB ones.
 	* meow_hash.h: New.
 
