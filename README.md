@@ -1,6 +1,6 @@
 # Update (Oct 31, 2018)
 * A **new version of mum hash** was created (version 2 or Halloween version)
-* The new version works **faster for short keys** which is a majority of hash table cases usages
+* The new version works **faster for short keys** which are a majority of hash table cases usages
 * The new version also passes all tests of SMHasher
 * The old version still can be used by definining macro `MUM_V1` before compiling `mum.h`
   * When `MUM_V1` is defined, you will get the same hashes as previously
@@ -8,14 +8,15 @@
   * This has a tiny impact on mum hash performance
 * I posted performance results for more fresh CPUs (i7-8700K, Power9, and APM X-Gene CPU Potenza A3)
 * I also added performance results for a new hash, [**Meow hash**](https://github.com/cmuratori/meow_hash)
-  * Meow hash is based on usage of x86-64 AES insn
+  * Meow hash is based on usage of x86-64 AES insns
   * Meow hash is the fastest hash for very long keys but it is not suitable for hash tables
     * Meow is too slow for most hash table cases
-    * Meow hash requires **aligned data** because AES insn needs aligned data
+    * Meow can be used **only for x86-64**
+    * Meow hash requires **aligned data** because AES insns needs aligned data
 * **MUM PRNG performance was improved**
   * A performance bug (preventing inlining of code specialized for different architectures) was fixed 
 * **MUM-512 performance was improved**
-  * The same performance bug was fixed 
+  * The same performance bug was fixed but in a different way
 
 # MUM Hash
 * MUM hash is a **fast non-cryptographic hash function**
@@ -290,10 +291,10 @@ sh bench
         difference will be negligible as one PRN calculation takes
         only about **3-4 machine cycle** for xoroshiro/xoshiro and MUM PRN.
   * All PRNG were tested by [practrand](http://pracrand.sourceforge.net/) with
-    256GB PRNG generated stream (it took hours)
+    256GB PRNG generated stream (it took a lot of hours)
       * **xoroshiro128+, xoshiro256+, and xoshiro512+ failed** on the first stages of practrand
       * the rest PRNGs passed
-      * BBS PRNG was tested by only 4GB stream because it is too slow
+      * BBS PRNG was tested by only 16GB stream because it is too slow
   * Here is the speed of the PRNGs in millions generated PRNs
     per second on 4.7 GHz Intel i7-8700K:
 

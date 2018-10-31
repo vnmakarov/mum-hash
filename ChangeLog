@@ -1,5 +1,9 @@
 2018-10-31  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
+	* README.md: Minor editions.
+
+2018-10-31  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
 	* README.md: Update for PRNGs and MUM-512.
 	* mum-512.h (_MC_FRESH_GCC, _mc_hash_avx2): Removed.
 	(_mc_hash_default): Don't check _MC_UNALIGNED_ACCESS.
