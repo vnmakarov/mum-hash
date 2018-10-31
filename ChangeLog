@@ -1,6 +1,6 @@
 2018-10-31  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
-	* README.md: Minor editions.
+	* README.md: Minor editions.  Add RAND failure on practrand.
 
 2018-10-31  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 

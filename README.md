@@ -292,7 +292,7 @@ sh bench
         only about **3-4 machine cycle** for xoroshiro/xoshiro and MUM PRN.
   * All PRNG were tested by [practrand](http://pracrand.sourceforge.net/) with
     256GB PRNG generated stream (it took a lot of hours)
-      * **xoroshiro128+, xoshiro256+, and xoshiro512+ failed** on the first stages of practrand
+      * **GLIBC RAND, xoroshiro128+, xoshiro256+, and xoshiro512+ failed** on the first stages of practrand
       * the rest PRNGs passed
       * BBS PRNG was tested by only 16GB stream because it is too slow
   * Here is the speed of the PRNGs in millions generated PRNs
