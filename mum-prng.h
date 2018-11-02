@@ -63,42 +63,10 @@
 
 static struct {
   int count; 
-#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
-  int avx2_support;
-#endif
+  void (*update_func) (void);
   /* MUM PRNG state */
   uint64_t state[MUM_PRNG_UNROLL]; 
 } _mum_prng_state;
-
-#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
-static inline void
-_mum_prng_setup_avx2 (void) {
-  __builtin_cpu_init ();
-  _mum_prng_state.avx2_support = __builtin_cpu_supports ("avx2");
-}
-#endif
-
-static inline void
-_start_mum_prng (uint32_t seed) {
-  int i;
-
-  _mum_prng_state.count = MUM_PRNG_UNROLL;
-  for (i = 0; i < MUM_PRNG_UNROLL; i++)
-    _mum_prng_state.state[i] = seed + 1;
-#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
-  _mum_prng_setup_avx2 ();
-#endif
-}
-
-static inline void
-init_mum_prng (void) {
-  _start_mum_prng (0);
-}
-
-static inline void
-set_mum_prng_seed (uint32_t seed) {
-  _start_mum_prng (seed);
-}
 
 #if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
 /* This code specialized for Haswell generates MULX insns. */
@@ -116,29 +84,64 @@ _mum_prng_update_avx2 (void) {
   int i;
 
   _mum_prng_state.count = 0;
-  for (i = 0; i < MUM_PRNG_UNROLL; i++)
-    _mum_prng_state.state[i] ^= _mum_avx2 (_mum_prng_state.state[i], _mum_primes[i]);
+  for (i = 0; i < MUM_PRNG_UNROLL - 1; i++)
+    _mum_prng_state.state[i] ^= _mum_avx2 (_mum_prng_state.state[i + 1], _mum_primes[i]);
+  _mum_prng_state.state[MUM_PRNG_UNROLL - 1] ^= _mum_avx2 (_mum_prng_state.state[0], _mum_primes[MUM_PRNG_UNROLL - 1]);
 }
 #endif
 
 static void __attribute__ ((noinline))
 _mum_prng_update (void) {
   int i;
+
   _mum_prng_state.count = 0;
+  for (i = 0; i < MUM_PRNG_UNROLL - 1; i++)
+    _mum_prng_state.state[i] ^= _mum (_mum_prng_state.state[i + 1], _mum_primes[i]);
+  _mum_prng_state.state[MUM_PRNG_UNROLL - 1] ^= _mum (_mum_prng_state.state[0], _mum_primes[MUM_PRNG_UNROLL - 1]);
+}
+
+#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
+static inline void
+_mum_prng_setup_avx2 (void) {
+  __builtin_cpu_init ();
+  if (__builtin_cpu_supports ("avx2"))
+    _mum_prng_state.update_func = _mum_prng_update_avx2;
+  else
+    _mum_prng_state.update_func = _mum_prng_update;
+
+}
+#endif
+
+static inline void
+_start_mum_prng (uint32_t seed) {
+  int i;
+
+  _mum_prng_state.count = MUM_PRNG_UNROLL;
   for (i = 0; i < MUM_PRNG_UNROLL; i++)
-    _mum_prng_state.state[i] ^= _mum (_mum_prng_state.state[i], _mum_primes[i]);
+    _mum_prng_state.state[i] = seed + 1;
+#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
+  _mum_prng_setup_avx2 ();
+#else
+  _mum_prng_state.update_func = _mum_prng_update;
+#endif
+}
+
+static inline void
+init_mum_prng (void) {
+  _start_mum_prng (0);
+}
+
+static inline void
+set_mum_prng_seed (uint32_t seed) {
+  _start_mum_prng (seed);
 }
 
 static inline uint64_t
 get_mum_prn (void) {
   if (EXPECT (_mum_prng_state.count == MUM_PRNG_UNROLL, 0)) {
-#if defined(__x86_64__) && defined(_MUM_PRNG_FRESH_GCC)
-    if (EXPECT (_mum_prng_state.avx2_support, 1)) {
-      _mum_prng_update_avx2 ();
-      return _mum_prng_state.state[_mum_prng_state.count++];
-    }
-#endif
-    _mum_prng_update ();
+    _mum_prng_state.update_func ();
+    _mum_prng_state.count = 1;
+    return _mum_prng_state.state[0];
   }
   return _mum_prng_state.state[_mum_prng_state.count++];
 }

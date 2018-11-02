@@ -290,11 +290,16 @@ sh bench
       * both code without inlining will be visibly slower and the speed
         difference will be negligible as one PRN calculation takes
         only about **3-4 machine cycle** for xoroshiro/xoshiro and MUM PRN.
+  * **Update Nov. 2**: I found that MUM PRNG fails practrand on 512GB.  So I modified it.
+    Instead of basically 16 independent PRNGs with 64-bit state, I made it one PRNG with 1024-bit state.
+    I also managed to speed up MUM PRNG by 15%.
+      * There was a typo in `XOSHIRO512**` performance result (it was 1944 M prns/sec).  So I fixed it.
+        It is actually 1044.
   * All PRNG were tested by [practrand](http://pracrand.sourceforge.net/) with
-    256GB PRNG generated stream (it took a lot of hours)
+    4TB PRNG generated stream (it took a few days)
       * **GLIBC RAND, xoroshiro128+, xoshiro256+, and xoshiro512+ failed** on the first stages of practrand
       * the rest PRNGs passed
-      * BBS PRNG was tested by only 16GB stream because it is too slow
+      * BBS PRNG was tested by only 64GB stream because it is too slow
   * Here is the speed of the PRNGs in millions generated PRNs
     per second on 4.7 GHz Intel i7-8700K:
 
@@ -304,10 +309,10 @@ BBS                      | 0.078       |
 ChaCha                   | 199         |
 SipHash24                | 413         |
 MUM512                   |  83         |
-MUM                      |1156         |
+MUM                      |1317         |
 XOSHIRO128**             |1130         |
 XOSHIRO256**             |1337         |
-XOSHIRO512**             |1944         |
+XOSHIRO512**             |1044         |
 GLIBC RAND               | 193         |
 XOROSHIRO128+            |1342         |
 XOSHIRO256+              |1339         |

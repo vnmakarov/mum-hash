@@ -1,3 +1,17 @@
+2018-11-02  Vladimir Makarov  <vmakarov@gcc.gnu.org>
+
+	* README.md: Add update about mum-prng.  Correct typo for
+	xoshiro512** result.
+	* mum-prng.h (_mum_prng_state): Change avx2_support onto
+	update_func.
+	(_mum_prng_setup_avx2): Setup update_func.  Move below.
+	(_start_mum_prng): Setup update_func for non x86-64.  Move below.
+	(init_mum_prng, set_mum_prng_seed): Move below.
+	(_mum_prng_update_avx2, _mum_prng_update): Update a state word
+	from the next word.
+	(get_mum_prn): Simplify.
+	* src/bench-prng: Use env. variable MUM_ONLY.
+
 2018-10-31  Vladimir Makarov  <vmakarov@gcc.gnu.org>
 
 	* README.md: Minor editions.  Add RAND failure on practrand.
