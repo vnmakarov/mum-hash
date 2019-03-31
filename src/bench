@@ -2,9 +2,11 @@
 
 # Benchmarking different hash functions.
 
-IFS='%'
 temp=__temp
 COPTFLAGS=${COPTFLAGS:--O3}
+if test `uname -p` == x86_64; then
+    COPTFLAGS=`echo $COPTFLAGS -march=native`
+fi
 LTO=${LTO:--flto}
 CC=${CC:-cc}
 CXX=${CXX:-c++}

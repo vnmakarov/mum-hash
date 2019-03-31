@@ -74,11 +74,11 @@ typedef unsigned __int64 uint64_t;
 
 #include <emmintrin.h>
 #include <wmmintrin.h>
+#include "meow_intrinsics.h"
 #include "meow_hash.h"
 
 static void meowhash_test(const void *key, int len, uint32_t seed, void *out) {
-  meow_lane Hash = MeowHash1(seed, len, key);
-  *(uint64_t*)out = Hash.Sub[0];
+  *(uint64_t*)out = MeowU64From (MeowHash_Accelerated (seed, len, key), 0);
 }
 
 #define test meowhash_test
