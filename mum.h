@@ -183,6 +183,17 @@ _mum_le32 (uint32_t v) {
 #endif
 }
 
+static inline uint64_t
+_mum_le16 (uint16_t v) {
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || !defined(MUM_TARGET_INDEPENDENT_HASH)
+  return v;
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+  return (v >> 8) | ((v & 0xff) << 8);
+#else
+#error "Unknown endianess"
+#endif
+}
+
 /* Macro defining how many times the most nested loop in
    _mum_hash_aligned will be unrolled by the compiler (although it can
    make an own decision:).  Use only a constant here to help a
@@ -196,8 +207,10 @@ _mum_le32 (uint32_t v) {
 #define _MUM_UNROLL_FACTOR_POWER 3
 #elif defined(__aarch64__) && !defined(MUM_TARGET_INDEPENDENT_HASH)
 #define _MUM_UNROLL_FACTOR_POWER 4
-#else
+#elif defined (MUM_V1) || defined (MUM_V2)
 #define _MUM_UNROLL_FACTOR_POWER 2
+#else
+#define _MUM_UNROLL_FACTOR_POWER 3
 #endif
 #endif
 
@@ -222,7 +235,7 @@ _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   size_t i;
   size_t n;
   
-#ifdef MUM_V1
+#ifndef MUM_V2
   result = _mum (result, _mum_block_start_prime);
 #endif
   while  (len > _MUM_UNROLL_FACTOR * sizeof (uint64_t)) {
@@ -230,8 +243,14 @@ _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
        64x64->128-bit multiplication.  AVX2 currently only have vector
        insns for 4 32x32->64-bit multiplication and for 1
        64x64->128-bit multiplication (pclmulqdq).  */
+#if defined (MUM_V1) || defined (MUM_V2)
     for (i = 0; i < _MUM_UNROLL_FACTOR; i++)
       result ^= _mum (_mum_le (((uint64_t *) str)[i]), _mum_primes[i]);
+#else
+    for (i = 0; i < _MUM_UNROLL_FACTOR; i += 2)
+      result ^= _mum (_mum_le (((uint64_t *) str)[i]) ^ _mum_primes[i],
+		      _mum_le (((uint64_t *) str)[i + 1]) ^ _mum_primes[i + 1]);
+#endif
     len -= _MUM_UNROLL_FACTOR * sizeof (uint64_t);
     str += _MUM_UNROLL_FACTOR * sizeof (uint64_t);
     /* We will use the same prime numbers on the next iterations --
@@ -245,14 +264,12 @@ _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   switch (len) {
   case 7:
     u64 = _mum_le32 (*(uint32_t *) str);
-    u64 |= (uint64_t) str[4] << 32;
-    u64 |= (uint64_t) str[5] << 40;
+    u64 |= _mum_le16 (*(uint16_t *) (str + 4)) << 32;
     u64 |= (uint64_t) str[6] << 48;
     return result ^ _mum (u64, _mum_tail_prime);
   case 6:
     u64 = _mum_le32 (*(uint32_t *) str);
-    u64 |= (uint64_t) str[4] << 32;
-    u64 |= (uint64_t) str[5] << 40;
+    u64 |= _mum_le16 (*(uint16_t *) (str + 4)) << 32;
     return result ^ _mum (u64, _mum_tail_prime);
   case 5:
     u64 = _mum_le32 (*(uint32_t *) str);
@@ -262,13 +279,11 @@ _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
     u64 = _mum_le32 (*(uint32_t *) str);
     return result ^ _mum (u64, _mum_tail_prime);
   case 3:
-    u64 = str[0];
-    u64 |= (uint64_t) str[1] << 8;
+    u64 = _mum_le16 (*(uint16_t *) str);
     u64 |= (uint64_t) str[2] << 16;
     return result ^ _mum (u64, _mum_tail_prime);
   case 2:
-    u64 = str[0];
-    u64 |= (uint64_t) str[1] << 8;
+    u64 = _mum_le16 (*(uint16_t *) str);
     return result ^ _mum (u64, _mum_tail_prime);
   case 1:
     u64 = str[0];
@@ -280,12 +295,14 @@ _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
 /* Final randomization of H.  */
 static inline uint64_t
 _mum_final (uint64_t h) {
-#ifndef MUM_V1
-  h ^= _mum_rotl (h, 33);
-#endif
+#if defined (MUM_V1)
   h ^= _mum (h, _mum_finish_prime1);
-#ifdef MUM_V1
   h ^= _mum (h, _mum_finish_prime2);
+#elif defined (MUM_V2)
+  h ^= _mum_rotl (h, 33);
+  h ^= _mum (h, _mum_finish_prime1);
+#else
+  h = _mum (h, h);
 #endif
   return h;
 }

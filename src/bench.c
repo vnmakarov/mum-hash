@@ -103,7 +103,7 @@ static void mum_test64(const void *key, int len, uint32_t seed, void *out) {
 #endif
 
 
-#ifdef SPEED
+#ifdef SPEEDBULK
 #include <stdlib.h>
 #include <stdio.h>
 uint32_t arr[16 * 256 * 1024];
@@ -120,7 +120,7 @@ int main () {
 }
 #endif
 
-#ifdef SPEED2
+#ifdef SPEED8
 /* We should use external to prevent optimizations for MUM after
    inlining.  Otherwise MUM results will be too good.  */
 int len = 8;
@@ -137,7 +137,7 @@ int main () {
 }
 #endif
 
-#ifdef SPEED3
+#ifdef SPEED16
 int len = 16;
 #include <stdlib.h>
 #include <stdio.h>
@@ -154,7 +154,7 @@ int main () {
 }
 #endif
 
-#ifdef SPEED4
+#ifdef SPEED32
 int len = 32;
 #include <stdlib.h>
 #include <stdio.h>
@@ -170,7 +170,7 @@ int main () {
 }
 #endif
 
-#ifdef SPEED5
+#ifdef SPEED64
 int len = 64;
 #include <stdlib.h>
 #include <stdio.h>
@@ -187,7 +187,7 @@ int main () {
 }
 #endif
 
-#ifdef SPEED6
+#ifdef SPEED128
 int len = 128;
 #include <stdlib.h>
 #include <stdio.h>
@@ -207,7 +207,32 @@ int main () {
 
 #endif
 
-#ifdef SPEED1
+#ifdef SPEED256
+int len = 256;
+#include <stdlib.h>
+#include <stdio.h>
+int main () {
+  int i, j; uint64_t k[32]; uint64_t out;
+  
+  k[0] = rand (); k[1] = rand ();k[2] = rand (); k[3] = rand ();
+  k[4] = rand (); k[5] = rand ();k[6] = rand (); k[7] = rand ();
+  k[8] = rand (); k[9] = rand ();k[10] = rand (); k[11] = rand ();
+  k[12] = rand (); k[13] = rand ();k[14] = rand (); k[15] = rand ();
+  k[16] = rand (); k[17] = rand ();
+  k[18] = rand (); k[19] = rand ();k[20] = rand (); k[21] = rand ();
+  k[22] = rand (); k[23] = rand ();k[24] = rand (); k[25] = rand ();
+  k[26] = rand (); k[27] = rand ();
+  k[28] = rand (); k[29] = rand ();k[30] = rand (); k[31] = rand ();
+  for (j = 0; j < 128; j++)
+    for (i = 0; i < 10000000; i++)
+      test (k, len, 2, &out), k[0] = out;
+  printf ("256-byte: %s:%llx\n", (size_t)k & 0x7 ? "unaligned" : "aligned", out);
+  return 0;
+}
+
+#endif
+
+#ifdef SPEED5
 /* We should use external to prevent optimizations for MUM after
    inlining.  Otherwise MUM results will be too good.  */
 int len = 5;
@@ -220,6 +245,23 @@ int main () {
     for (i = 0; i < 10000000; i++)
       test (&k, len, 2, &out), k = out;
   printf ("5-byte: %s:%llx\n", (size_t)&k & 0x7 ? "unaligned" : "aligned", k);
+  return 0;
+}
+#endif
+
+#ifdef SPEED6
+/* We should use external to prevent optimizations for MUM after
+   inlining.  Otherwise MUM results will be too good.  */
+int len = 6;
+#include <stdlib.h>
+#include <stdio.h>
+int main () {
+  int i, j; uint64_t k = rand (); uint64_t out;
+  
+  for (j = 0; j < 128; j++)
+    for (i = 0; i < 10000000; i++)
+      test (&k, len, 2, &out), k = out;
+  printf ("6-byte: %s:%llx\n", (size_t)&k & 0x7 ? "unaligned" : "aligned", k);
   return 0;
 }
 #endif

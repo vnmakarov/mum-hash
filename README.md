@@ -1,3 +1,18 @@
+# Update (May 12, 2019)
+* Mum-hash **version 3** has been released
+* Version 3 has **faster hashing for small and long keys**
+  * Version 3 is default.  To switch on version 1 or version 2, please define
+    macro MUM_V1 or MUM_V2 before inclusion of mum.h
+* Version 3 has **higher quality hashing** comparing to version 2
+  * Although version 2 passed all the tests of appleby-smhasher, it did not pass strict Avalanche tests of demerphq-smhasher
+  * Version 3 fixed this problem and now version 3 (as version 1) passes all tests of demerphq-smhasher
+* Although I have a high quality x86_64 vectorized mum-hash
+  implementation (using pmuludq256/pshufd256/pxo256) which achieves
+  Meow hash speed on very long keys I decided not to add this
+  implementation to version 3 as it complicates the code, makes code
+  slower on targets not having analogous vector instructions, and as the
+  speed of hashing long keys is rarely used for hash tables
+
 # Update (Apr 1, 2019)
 * Meow hash is updated to version 0.4
 * Benchmark results for x86-64 were updated
@@ -120,53 +135,57 @@
 * Hashing 10,000 of 16MB strings
 * Hashing 1,280M strings for all other length strings
 
-|        | Spooky      | City        | xxHash      | SipHash24   | Metro       | MeowHash    | MUM-V1      | MUM-V2      |
-:--------|------------:|------------:|------------:|------------:|------------:|------------:|------------:|------------:|
-|5-byte  |   6.62      |   8.77      |   6.80      |   10.08     |   5.75      |   11.25     |   6.57      | **5.53**    | 
-|8-byte  |   6.30      |   8.81      |   6.54      |   12.90     |   4.19      |   11.24     |   4.74      | **3.69**    | 
-|16-byte |   12.63     |   8.19      |   8.11      |   16.12     |   5.71      |   9.41      |   5.84      | **4.77**    | 
-|32-byte |   13.20     |   9.61      |   11.59     |   22.40     |   11.72     |   9.41      |   6.83      | **5.50**    | 
-|64-byte |   19.39     |   10.60     |   12.86     |   36.67     |   12.53     |   9.41      |   9.35      | **8.79**    | 
-|128-byte|   32.58     |   14.25     |   15.48     |   63.80     |   14.63     | **10.46**   |   13.64     |   13.01     | 
-|Bulk    |   9.74      |   9.18      |   9.58      |   48.62     |   8.86      | **4.69**    |   10.38     |   10.43     | 
+|        | Spooky   | City     | xxHash   | SipHash24   | Metro    | MeowHash  | MUM-V1   | MUM-V2    | MUM-V3    |
+:--------|---------:|---------:|---------:|------------:|---------:|----------:|---------:|----------:|----------:|
+|5-byte  |   6.62s  |   8.78s  |   6.80s  |   10.07s    |   5.76s  |  11.25s   |   6.57s  |   5.56s   | **4.85s** | 
+|8-byte  |   6.30s  |   8.81s  |   6.54s  |   12.89s    |   4.18s  |  11.25s   |   4.74s  |   3.69s   | **2.88s** | 
+|16-byte |  12.64s  |   8.20s  |   8.11s  |   16.13s    |   5.71s  |   9.42s   |   5.85s  |   4.75s   | **3.95s** | 
+|32-byte |  13.20s  |   9.60s  |  11.60s  |   22.40s    |  11.72s  |   9.42s   |   6.83s  |   5.52s   | **4.71s** | 
+|64-byte |  19.40s  |  10.60s  |  12.86s  |   36.70s    |  12.53s  |   9.42s   |   9.35s  |   8.79s   | **6.54s** | 
+|128-byte|  32.58s  |  14.25s  |  15.49s  |   63.82s    |  14.63s  |**10.46s** |  13.64s  |  13.01s   |  11.53s   | 
+|Bulk    |   9.74s  |   9.17s  |   9.59s  |   48.63s    |   8.89s  | **4.65s** |  10.33s  |  10.38s   |   7.93s   | 
 
 # Power9 (3.8GHz)
 
-|           |  Spooky| City64| xxHash64|SipHash24| Metro64  |  MUM-V1  |  MUM-V2  |
-:-----------|-------:|------:|--------:|--------:|---------:|---------:|---------:|
-5 bytes     |  22.07s| 23.69s| 20.48s  |   45.08s|  18.02s  |  17.50s  |**17.22s**|
-8 bytes     |  17.59s| 23.72s| 19.83s  |   54.54s|   9.85s  |   9.14s  | **7.50s**|
-16 bytes    |  33.97s| 18.42s| 23.68s  |   60.43s|**15.71s**|  17.40s  |  17.05s  |
-32 bytes    |  32.19s| 21.59s| 35.51s  |   76.31s|  27.92s  |  18.39s  |**18.30s**|
-64 bytes    |  53.51s| 23.54s| 38.07s  |  105.25s|  29.85s  |**20.51s**|  20.62s  |
-128 bytes   |  87.36s| 33.15s| 45.11s  |  176.88s|  34.02s  |  29.81s  |**28.74s**|
-16MB        |  17.91s| 13.38s| 14.55s  |  116.90s|  12.22s  |  11.67s  |**11.58s**|
+|           |  Spooky| City64| xxHash64|SipHash24| Metro64  |  MUM-V1  |  MUM-V2  |  MUM-V3  |
+:-----------|-------:|------:|--------:|--------:|---------:|---------:|---------:|---------:|
+5 bytes     |  22.14s| 23.87s| 20.54s  |   45.06s|  18.01s  |  18.44s  |  18.29s  |**17.29s**|
+8 bytes     |  17.62s| 23.68s| 19.92s  |   54.13s|   9.82s  |   9.18s  |   7.55s  | **6.00s**|
+16 bytes    |  34.02s| 18.60s| 23.62s  |   61.19s|**15.75s**|  17.32s  |  17.47s  |  16.46s  |
+32 bytes    |  32.16s| 21.66s| 34.73s  |   75.72s|  27.82s  |  18.72s  |  18.87s  |**17.93s**|
+64 bytes    |  53.53s| 23.40s| 37.97s  |  104.23s|  29.88s  |  21.34s  |  20.42s  |**20.29s**|
+128 bytes   |  87.46s| 33.17s| 44.60s  |  193.19s|  38.73s  |  32.96s  |  30.90s  |**27.47s**|
+16MB        |  17.12s| 13.64s| 14.56s  |  116.85s|  12.22s  |  11.59s  |  11.56s  |**10.69s**|
 
 # AARCH64 (APM X-Gene)
 
-|           |  Spooky  | City64   | xxHash64|SipHash24| Metro64  |  MUM-V1  |  MUM-V2  | 
-:-----------|---------:|---------:|--------:|--------:|---------:|---------:|---------:|
-5 bytes     |  18.13s  |  25.60s  | 22.40s  |   27.72s|  18.67s  |  20.80s  |**16.00s**|
-8 bytes     |  17.60s  |  25.60s  | 21.34s  |   35.74s|  13.33s  |  14.39s  |**11.19s**|
-16 bytes    |  30.94s  |  25.06s  | 26.14s  |   45.34s|  17.06s  |  21.34s  |**16.01s**|
-32 bytes    |  30.94s  |  29.34s  | 36.27s  |   62.94s|  36.27s  |  28.27s  |**24.00s**|
-64 bytes    |  44.81s  |**30.40s**| 40.54s  |  101.87s|  38.41s  |  41.61s  |  37.34s  |
-128 bytes   |  73.07s  |  45.34s  | 49.07s  |  195.76s|**43.74s**|  69.34s  |  64.55s  |
-16MB        |**39.93s**|  45.80s  | 53.26s  |  188.45s|  53.25s  |  48.48s  |  48.47s  |
+|           |  Spooky  | City64   | xxHash64|SipHash24| Metro64  |  MUM-V1  |  MUM-V2  |  MUM-V3  | 
+:-----------|---------:|---------:|--------:|--------:|---------:|---------:|---------:|---------:|
+5 bytes     |  18.13s  |  25.60s  | 22.40s  |   27.73s|  18.67s  |  20.79s  |**16.00s**|  17.07s  |
+8 bytes     |  17.60s  |  25.60s  | 21.33s  |   35.73s|  13.33s  |  14.39s  |  11.20s  | **9.06s**|
+16 bytes    |  30.93s  |  25.07s  | 26.13s  |   45.33s|  17.07s  |  21.33s  |**15.99s**|  19.73s  |
+32 bytes    |  30.94s  |  29.33s  | 36.27s  |   62.94s|  36.27s  |  28.26s  |**24.00s**|  28.27s  |
+64 bytes    |  44.80s  |**30.40s**| 40.54s  |  101.87s|  38.40s  |  41.60s  |  37.34s  |  41.07s  |
+128 bytes   |  73.07s  |  45.34s  | 49.07s  |  195.75s|**43.74s**|  69.34s  |  64.54s  |  67.74s  |
+16MB        |  40.01s  |  45.82s  | 53.24s  |  188.42s|  53.25s  |  48.48s  |  48.48s  |**33.90s**|
 
 # Vectorization
-* A major loop in function `_mum_hash_aligned` could be vectorized
-  using vector multiplication, addition, and shuffle instructions
-* Unfortunately, x86-64 CPUs currently does not have vector
+* A major loop in function `_mum_hash_aligned` can be vectorized
+  using vector multiplication, addition, xor, and shuffle instructions
+* Modern x86-64 CPUs currently does not have vector
   multiplication `64 x 64-bit -> 128-bit` (`pclmulqdq` only 1 `64x64->128-bit` multiplication)
 * AVX2 CPUs only have vector multiplication `32 x 32-bit -> 64-bit`
-  * One such vector instruction makes 4 multiplication which is
-    roughly equivalent what one `MULQ/MULX` insn does but it has bigger
-    latency time than `MULQ/MULX`
-  * Therefore all my vectorized code I tried was slower
+  * One such vector instruction makes 4 multiplications which is
+    roughly equivalent what two `MULQ/MULX` insns does
+  * On very long keys, usage of such insn permits to achieve speed of Meow hash which is based on usage of AES insns
 * If Intel introduces a new vector insn for `64 x 64-bit -> 128-bit`
   multiplication, potentially it could increase MUM speed up to 2
-  times (may be less as it requires to provide aligned data)
+  times (may be less as major memory speed access becomes a major bottleneck of the overall hash speed)
+* I decided not to use the vector insns because it makes mum-hash
+  implementation complicated and less portable
+* I believe major application of non-cryptographic hash functions are
+  hashing for hash tables and speed of hashing of short keys is the
+  most important requirement for such application
 
 # Using cryptographic vs. non-cryptographic hash function
   * People worrying about denial attacks based on generating hash
