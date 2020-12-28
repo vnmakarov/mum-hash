@@ -1,3 +1,5 @@
+# Update (Dec 28, 2020)
+* A wrong MUM calculation for aarch64 has been fixed.
 # Update (May 12, 2019)
 * Mum-hash **version 3** has been released
 * Version 3 has **faster hashing for small and long keys**
