@@ -1,3 +1,6 @@
+# Update (Mar 22, 2021)
+* New performance data for Apple M1 silicon were added
+
 # Update (Dec 28, 2020)
 * A wrong MUM calculation for aarch64 has been fixed.
 # Update (May 12, 2019)
@@ -146,6 +149,18 @@
 |64-byte |  19.40s  |  10.60s  |  12.86s  |   36.70s    |  12.53s  |   9.42s   |   9.35s  |   8.79s   | **6.54s** | 
 |128-byte|  32.58s  |  14.25s  |  15.49s  |   63.82s    |  14.63s  |**10.46s** |  13.64s  |  13.01s   |  11.53s   | 
 |Bulk    |   9.74s  |   9.17s  |   9.59s  |   48.63s    |   8.89s  | **4.65s** |  10.33s  |  10.38s   |   7.93s   | 
+
+# Apple M1 silicon
+
+|                           | MUM-V1| MUM-V2 |  MUM-V3  | City64  |  Spooky | xxHash64| Metro64 |SipHash24| 
+:---------------------------|------:|-------:|---------:|--------:|--------:|--------:|--------:|--------:|
+5 bytes  (1,280M strings)   |11.19s |  9.19s |**7.95s** |  12.97s |  10.10s |  10.51s |  9.93s  |  22.22s |
+8 bytes  (1,280M strings)   |8.43s  |  6.43s |**5.23s** |  13.32s |  9.10s  |  9.64s  |  6.33s  |  30.95s |
+16 bytes (1,280M strings)   |11.07s |  9.04s |**7.80s** |  12.83s |  19.00s |  14.84s |  8.45s  |  36.67s |
+32 bytes (1,280M strings)   |12.05s | 10.05s |**8.83s** |  14.94s |  19.04s |  17.56s |  29.71s |  49.97s |
+64 bytes (1,280M strings)   |13.65s | 11.87s |**10.49s**|  15.58s |  29.23s |  23.22s |  33.45s |  73.63s |
+128 bytes (1,280M strings)  |17.60s | 15.60s |**14.46s**|  23.38s |  49.57s |  28.88s | 40.33s  | 123.77s |
+16MB (10K strings)          |10.85s | 10.89s |**6.52s** |  11.36s |  13.58s |  11.90s | 13.83s  |  98.20s |
 
 # Power9 (3.8GHz)
 
@@ -344,3 +359,21 @@ GLIBC RAND               | 193         |
 XOROSHIRO128+            |1342         |
 XOSHIRO256+              |1339         |
 XOSHIRO512+              |1253         |
+
+  * Here is the speed of the PRNGs in millions generated PRNs
+    per second on Apple M1 silicon:
+    
+|                        | M prns/sec  |
+:------------------------|------------:|
+BBS                      |  -          |
+ChaCha                   |  191.33     |
+Sip24                    |  402.48     |
+MUM512                   |  152.27     |
+MUM                      | 1414.57     |
+XOROSHIRO128**           |  482.91     |
+XOSHIRO256**             |  732.24     |
+XOSHIRO512**             |  689.60     |
+RAND                     |  180.02     |
+XOROSHIRO128+            |  621.52     |
+XOSHIRO256+              |  954.42     |
+XOSHIRO512+              |  890.81     |
