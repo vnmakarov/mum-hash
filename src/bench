@@ -2,7 +2,10 @@
 
 # Benchmarking different hash functions.
 
-temp=__temp
+temp=__hash-temp.out
+temp2=__hash-temp2.out
+temp3=__hash-temp3.out
+
 COPTFLAGS=${COPTFLAGS:--O3}
 if test `uname -p` == x86_64; then
     COPTFLAGS=`echo $COPTFLAGS -march=native`
@@ -12,13 +15,6 @@ fi
 LTO=${LTO:--flto}
 CC=${CC:-cc}
 CXX=${CXX:-c++}
-
-print() {
-    s=`grep -E 'user[ 	]*[0-9]' $2 | sed s/.*user// | sed s/\\t//`
-    echo $1 "$s"s
-}
-
-
 
 if test x${MUM_ONLY} == x; then
     echo compiling Spooky
@@ -33,29 +29,100 @@ if test x${MUM_ONLY} == x; then
     ${CC} ${COPTFLAGS} ${LTO} -w -c siphash24.c || exit 1
 fi
 
+if test x`echo -n` != "x-n";then NECHO="echo -n"; else NECHO=printf; fi
+
+rm -f $temp3
+
+percent () {
+    val=`awk "BEGIN {if ($2==0) print \"Inf\"; else printf \"%.2f\n\", $1/$2;}"`
+    echo "$val"x
+    echo "$3:$val" >>$temp3
+}
+
+skip () {
+    l=$1
+    n=$2
+    while test $l -le $n; do $NECHO " "; l=`expr $l + 1`; done
+}
+
+print_time() {
+    title="$1"
+    secs=$2
+    if test "x$NECHO" = x; then
+	echo $title:
+	echo "   " $secs
+    else
+	n=$title:
+	$NECHO "$n"
+	skip ${#n} 40
+	$NECHO "$secs"
+	skip ${#secs} 10
+        echo " " `percent $base_time $secs "$title"`
+    fi
+}
+
+TASKSET=""
+if type taskset >/dev/null 2>&1;then TASKSET="taskset -c 0";fi
+echo $TASKSET
+
+run () {
+  title=$1
+  program=$2
+  flag=$3
+  ok=
+  if (time -p $TASKSET $program) >$temp 2>$temp2; then
+      ok=y
+      (time -p $TASKSET $program) >$temp 2>>$temp2
+      (time -p $TASKSET $program) >$temp 2>>$temp2
+  fi
+  if test x$ok = x;then echo $program: FAILED; return 1; fi
+  secs=`grep -E 'user[ 	]*[0-9]' $temp2 | sed s/.*user// | sed s/\\t// | sort -n | head -1`
+  if test x$flag != x;then base_time=$secs;fi
+  print_time "$title" $secs
+}
+
 for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 64 128 256 0;do
     if test $i == 0; then
 	echo +++BULK speed 16MB '(10K keys)':
     else
 	echo +++$i-byte speed '(1,280M keys)':
     fi
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && run "MUM V3" "./a.out" first
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V1 -I../ bench.c && run "MUM V1" "./a.out"
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V2 -I../ bench.c && run "MUM V2" "./a.out"
     if test x${MUM_ONLY} == x; then
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "Spooky   :" $temp
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "City     :" $temp
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxHash   :" $temp
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -Dxxh3 bench.c && (time -p ./a.out) >$temp 2>&1 && print "xxh3   :" $temp
-	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -It1ha -DT1HA2 t1ha*.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "t1ha2   :" $temp
-	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && (time -p ./a.out) >$temp 2>&1 && print "SipHash24:" $temp
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "Metro    :" $temp
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && run "Spooky" "./a.out"
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && run "City" "./a.out"
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash bench.c && run "xxHash" "./a.out"
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -Dxxh3 bench.c && run "xxh3" "./a.out"
+	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -It1ha -DT1HA2 t1ha*.o bench.c && run "t1ha2" "./a.out"
+	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && run "Siphash24" "./a.out"
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && run "Metro" "./a.out"
 	if test `uname -p` == x86_64; then
 	    # Don't do LTO for MUM or MeowHash.  Otherwise it will be optimized too much and results will be too good on some targets
-	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -mavx2 -maes -DUseMeowHash -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MeowHash :" $temp
+	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -mavx2 -maes -DUseMeowHash -I../ bench.c && run "Meowhash" "./a.out"
 	fi
     fi
-    
-    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V1 -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM-V1   :" $temp
-    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V2 -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM-V2   :" $temp
-    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && (time -p ./a.out) >$temp 2>&1 && print "MUM-V3   :" $temp
 done
 
-rm -rf ./a.out $temp Spooky.o City.o siphash24.o t1ha*.o
+echo ============AVERAGE:=========
+IFS=$'\n'
+for i in `awk -F: '{print $1}' $temp3|sort|uniq`; do
+    unset IFS
+    s="$i:"
+    $NECHO "$s"
+    skip ${#s} 53
+    awk -F: -v name="$i" "name==\$1 {f = f + \$2; n++} END {printf \"%0.2fx\n\", f / n;}" < $temp3
+done
+
+echo ============GEOMEAN:=========
+IFS=$'\n'
+for i in `awk -F: '{print $1}' $temp3|sort|uniq`; do
+    unset IFS
+    s="$i:"
+    $NECHO "$s"
+    skip ${#s} 53
+    awk -F: -v name="$i" "BEGIN {f = 1.0} name==\$1 {f = f * \$2; n++} END {printf \"%0.2fx\n\", f ^  (1.0/n);}" < $temp3
+done
+
+rm -rf ./a.out $temp $temp2 $temp3 Spooky.o City.o siphash24.o t1ha*.o
