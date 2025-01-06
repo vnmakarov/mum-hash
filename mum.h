@@ -55,10 +55,12 @@ typedef unsigned __int64 uint64_t;
 #define _MUM_ATTRIBUTE_UNUSED __attribute__ ((unused))
 #define _MUM_OPTIMIZE(opts) __attribute__ ((__optimize__ (opts)))
 #define _MUM_TARGET(opts) __attribute__ ((__target__ (opts)))
+#define _MUM_INLINE inline __attribute__ ((always_inline))
 #else
 #define _MUM_ATTRIBUTE_UNUSED
 #define _MUM_OPTIMIZE(opts)
 #define _MUM_TARGET(opts)
+#define _MUM_INLINE inline
 #endif
 
 /* Macro saying to use 128-bit integers implemented by GCC for some targets. */
@@ -90,7 +92,7 @@ static uint64_t _mum_primes[] = {
 };
 
 /* Multiply 64-bit V and P and return sum of high and low parts of the result. */
-static inline uint64_t _mum (uint64_t v, uint64_t p) {
+static _MUM_INLINE uint64_t _mum (uint64_t v, uint64_t p) {
   uint64_t hi, lo;
 #if _MUM_USE_INT128
 #if defined(__aarch64__)
@@ -147,7 +149,7 @@ static inline uint64_t _mum (uint64_t v, uint64_t p) {
 #define _mum_bswap64(x) bswap64 (x)
 #endif
 
-static inline uint64_t _mum_le (uint64_t v) {
+static _MUM_INLINE uint64_t _mum_le (uint64_t v) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || !defined(MUM_TARGET_INDEPENDENT_HASH)
   return v;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -157,7 +159,7 @@ static inline uint64_t _mum_le (uint64_t v) {
 #endif
 }
 
-static inline uint32_t _mum_le32 (uint32_t v) {
+static _MUM_INLINE uint32_t _mum_le32 (uint32_t v) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || !defined(MUM_TARGET_INDEPENDENT_HASH)
   return v;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -167,7 +169,7 @@ static inline uint32_t _mum_le32 (uint32_t v) {
 #endif
 }
 
-static inline uint64_t _mum_le16 (uint16_t v) {
+static _MUM_INLINE uint64_t _mum_le16 (uint16_t v) {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ || !defined(MUM_TARGET_INDEPENDENT_HASH)
   return v;
 #elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
@@ -204,9 +206,9 @@ static inline uint64_t _mum_le16 (uint16_t v) {
 #define _MUM_UNROLL_FACTOR (1 << _MUM_UNROLL_FACTOR_POWER)
 
 /* Rotate V left by SH. */
-static inline uint64_t _mum_rotl (uint64_t v, int sh) { return v << sh | v >> (64 - sh); }
+static _MUM_INLINE uint64_t _mum_rotl (uint64_t v, int sh) { return v << sh | v >> (64 - sh); }
 
-static inline uint64_t _MUM_OPTIMIZE ("unroll-loops")
+static _MUM_INLINE uint64_t _MUM_OPTIMIZE ("unroll-loops")
   _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   uint64_t result = start;
   const unsigned char *str = (const unsigned char *) key;
@@ -264,7 +266,7 @@ static inline uint64_t _MUM_OPTIMIZE ("unroll-loops")
 }
 
 /* Final randomization of H. */
-static inline uint64_t _mum_final (uint64_t h) {
+static _MUM_INLINE uint64_t _mum_final (uint64_t h) {
 #if defined(MUM_V1)
   h ^= _mum (h, _mum_finish_prime1);
   h ^= _mum (h, _mum_finish_prime2);
@@ -297,7 +299,7 @@ static inline uint64_t _mum_final (uint64_t h) {
 #error "too small block length"
 #endif
 
-static inline uint64_t
+static _MUM_INLINE uint64_t
 #if defined(__x86_64__)
 _MUM_TARGET ("inline-all-stringops")
 #endif
@@ -322,7 +324,7 @@ _MUM_TARGET ("inline-all-stringops")
   return _mum_final (result);
 }
 
-static inline uint64_t _mum_next_factor (void) {
+static _MUM_INLINE uint64_t _mum_next_factor (void) {
   uint64_t start = 0;
   int i;
 
@@ -333,7 +335,7 @@ static inline uint64_t _mum_next_factor (void) {
 /* ++++++++++++++++++++++++++ Interface functions: +++++++++++++++++++  */
 
 /* Set random multiplicators depending on SEED. */
-static inline void mum_hash_randomize (uint64_t seed) {
+static _MUM_INLINE void mum_hash_randomize (uint64_t seed) {
   size_t i;
 
   srand (seed);
@@ -349,24 +351,24 @@ static inline void mum_hash_randomize (uint64_t seed) {
 }
 
 /* Start hashing data with SEED. Return the state. */
-static inline uint64_t mum_hash_init (uint64_t seed) { return seed; }
+static _MUM_INLINE uint64_t mum_hash_init (uint64_t seed) { return seed; }
 
 /* Process data KEY with the state H and return the updated state. */
-static inline uint64_t mum_hash_step (uint64_t h, uint64_t key) {
+static _MUM_INLINE uint64_t mum_hash_step (uint64_t h, uint64_t key) {
   return _mum (h, _mum_hash_step_prime) ^ _mum (key, _mum_key_step_prime);
 }
 
 /* Return the result of hashing using the current state H. */
-static inline uint64_t mum_hash_finish (uint64_t h) { return _mum_final (h); }
+static _MUM_INLINE uint64_t mum_hash_finish (uint64_t h) { return _mum_final (h); }
 
 /* Fast hashing of KEY with SEED. The hash is always the same for the same key on any target. */
-static inline size_t mum_hash64 (uint64_t key, uint64_t seed) {
+static _MUM_INLINE size_t mum_hash64 (uint64_t key, uint64_t seed) {
   return mum_hash_finish (mum_hash_step (mum_hash_init (seed), key));
 }
 
 /* Hash data KEY of length LEN and SEED. The hash depends on the target endianess and the unroll
  * factor. */
-static inline uint64_t mum_hash (const void *key, size_t len, uint64_t seed) {
+static _MUM_INLINE uint64_t mum_hash (const void *key, size_t len, uint64_t seed) {
 #if _MUM_UNALIGNED_ACCESS
   return _mum_final (_mum_hash_aligned (seed + len, key, len));
 #else
