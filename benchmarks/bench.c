@@ -1,8 +1,8 @@
 #if defined(Spooky)
 
 #include "Spooky.h"
-static void SpookyHash64_test(const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t*)out = SpookyHash::Hash64(key, len, seed);
+static void SpookyHash64_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = SpookyHash::Hash64 (key, len, seed);
 }
 
 #define test SpookyHash64_test
@@ -11,8 +11,8 @@ static void SpookyHash64_test(const void *key, int len, uint32_t seed, void *out
 #elif defined(City)
 
 #include "City.h"
-static void CityHash64_test ( const void * key, int len, uint32_t seed, void *out) {
-  *(uint64*)out = CityHash64WithSeed((const char *)key,len,seed);
+static void CityHash64_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64 *) out = CityHash64WithSeed ((const char *) key, len, seed);
 }
 
 #define test CityHash64_test
@@ -22,13 +22,14 @@ static void CityHash64_test ( const void * key, int len, uint32_t seed, void *ou
 
 #include <stdint.h>
 
-extern int siphash(uint8_t *out, const uint8_t *in, uint64_t inlen, const uint8_t *k);
+extern int siphash (uint8_t *out, const uint8_t *in, uint64_t inlen, const uint8_t *k);
 
-static void siphash_test (const void * key, int len, uint32_t seed, void * out) {
+static void siphash_test (const void *key, int len, uint32_t seed, void *out) {
   uint64_t s[2];
 
-  s[0] = seed; s[1] = 0;
-  siphash(out, (const uint8_t *) key, len, (const uint8_t *) s);
+  s[0] = seed;
+  s[1] = 0;
+  siphash (out, (const uint8_t *) key, len, (const uint8_t *) s);
 }
 
 #define test siphash_test
@@ -45,8 +46,8 @@ typedef unsigned __int64 uint64_t;
 
 #include "xxhash.c"
 
-static void xxHash64_test(const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t*)out = XXH64 (key, len, seed);
+static void xxHash64_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = XXH64 (key, len, seed);
 }
 
 #define test xxHash64_test
@@ -56,8 +57,8 @@ static void xxHash64_test(const void *key, int len, uint32_t seed, void *out) {
 
 #include "xxh3.h"
 
-static void xxh3_test(const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t*)out = XXH3_64bits (key, len);
+static void xxh3_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = XXH3_64bits (key, len);
 }
 
 #define test xxh3_test
@@ -66,8 +67,8 @@ static void xxh3_test(const void *key, int len, uint32_t seed, void *out) {
 #elif defined(T1HA2)
 
 #include "t1ha.h"
-static void t1ha_test(const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t*)out = t1ha2_atonce(key, len, seed);
+static void t1ha_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = t1ha2_atonce (key, len, seed);
 }
 
 #define test t1ha_test
@@ -76,8 +77,8 @@ static void t1ha_test(const void *key, int len, uint32_t seed, void *out) {
 #elif defined(City)
 
 #include "City.h"
-static void CityHash64_test ( const void * key, int len, uint32_t seed, void *out) {
-  *(uint64*)out = CityHash64WithSeed((const char *)key,len,seed);
+static void CityHash64_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64 *) out = CityHash64WithSeed ((const char *) key, len, seed);
 }
 
 #define test CityHash64_test
@@ -86,8 +87,8 @@ static void CityHash64_test ( const void * key, int len, uint32_t seed, void *ou
 #elif defined(METRO)
 
 #include "metrohash64.h"
-static void metro_test(const void *key, int len, uint32_t seed, void *out) {
-  MetroHash64::Hash ((const uint8_t *)key, len, (uint8_t *) out, seed);
+static void metro_test (const void *key, int len, uint32_t seed, void *out) {
+  MetroHash64::Hash ((const uint8_t *) key, len, (uint8_t *) out, seed);
 }
 
 #define test metro_test
@@ -107,8 +108,8 @@ typedef unsigned __int64 uint64_t;
 #include "meow_intrinsics.h"
 #include "meow_hash.h"
 
-static void meowhash_test(const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t*)out = MeowU64From (MeowHash_Accelerated (seed, len, key), 0);
+static void meowhash_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = MeowU64From (MeowHash_Accelerated (seed, len, key), 0);
 }
 
 #define test meowhash_test
@@ -125,11 +126,11 @@ typedef unsigned __int64 uint64_t;
 
 #include "meow_hash_x64_aesni.h"
 
-static void meowhash_test(const void *key, int len, uint32_t seed, void *out) {
-  meow_u128 Hash = MeowHash(MeowDefaultSeed, len, key);
-  long long unsigned Hash64 = MeowU64From(Hash, 0);
+static void meowhash_test (const void *key, int len, uint32_t seed, void *out) {
+  meow_u128 Hash = MeowHash (MeowDefaultSeed, len, key);
+  long long unsigned Hash64 = MeowU64From (Hash, 0);
 
-  *(uint64_t*)out = Hash64;
+  *(uint64_t *) out = Hash64;
 }
 
 #define test meowhash_test
@@ -138,12 +139,12 @@ static void meowhash_test(const void *key, int len, uint32_t seed, void *out) {
 #elif defined(MUM)
 
 #include "mum.h"
-static void mum_test(const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t *)out = mum_hash (key, len, seed);
+static void mum_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = mum_hash (key, len, seed);
 }
 
-static void mum_test64(const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t *)out = mum_hash64 (*(uint64_t *) key, seed);
+static void mum_test64 (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = mum_hash64 (*(uint64_t *) key, seed);
 }
 
 #define test mum_test
@@ -153,21 +154,20 @@ static void mum_test64(const void *key, int len, uint32_t seed, void *out) {
 #error "I don't know what to test"
 #endif
 
-
 #if DATA_LEN == 0
 
 #include <stdlib.h>
 #include <stdio.h>
 uint32_t arr[16 * 256 * 1024];
 int main () {
-  int i; uint64_t out;
-  
+  int i;
+  uint64_t out;
+
   for (i = 0; i < 16 * 256 * 1024; i++) {
     arr[i] = rand ();
   }
-  for (i = 0; i < 10000; i++)
-    test (arr, 16 * 256 * 1024 * 4, 2, &out), arr[0] = out;
-  printf ("%s:%llx\n", (size_t)arr & 0x7 ? "unaligned" : "aligned", out);
+  for (i = 0; i < 10000; i++) test (arr, 16 * 256 * 1024 * 4, 2, &out), arr[0] = out;
+  printf ("%s:%llx\n", (size_t) arr & 0x7 ? "unaligned" : "aligned", out);
   return 0;
 }
 
@@ -180,14 +180,15 @@ int len = DATA_LEN;
 /* We should use external to prevent optimizations for MUM after
    inlining.  Otherwise MUM results will be too good.  */
 int main () {
-  int i, j; uint64_t k[(DATA_LEN + 7) / 8 * 8]; uint64_t out;
-  
+  int i, j;
+  uint64_t k[(DATA_LEN + 7) / 8 * 8];
+  uint64_t out;
+
   assert (len <= 256);
   for (i = 0; i < sizeof (k) / sizeof (uint64_t); i++) k[i] = rand ();
   for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++)
-      test (k, len, 2, &out), k[0] = out;
-  printf ("%d-byte: %s:%llx\n", len, (size_t)k & 0x7 ? "unaligned" : "aligned", out);
+    for (i = 0; i < 10000000; i++) test (k, len, 2, &out), k[0] = out;
+  printf ("%d-byte: %s:%llx\n", len, (size_t) k & 0x7 ? "unaligned" : "aligned", out);
   return 0;
 }
 
