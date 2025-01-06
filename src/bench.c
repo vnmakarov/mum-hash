@@ -43,14 +43,44 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 #endif
 
-#include "xxhash.h"
-static XXH64_state_t* state = NULL;
+#include "xxhash.c"
 
 static void xxHash64_test(const void *key, int len, uint32_t seed, void *out) {
   *(uint64_t*)out = XXH64 (key, len, seed);
 }
 
 #define test xxHash64_test
+#define test64 test
+
+#elif defined(xxh3)
+
+#include "xxh3.h"
+
+static void xxh3_test(const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t*)out = XXH3_64bits (key, len);
+}
+
+#define test xxh3_test
+#define test64 test
+
+#elif defined(T1HA2)
+
+#include "t1ha.h"
+static void t1ha_test(const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t*)out = t1ha2_atonce(key, len, seed);
+}
+
+#define test t1ha_test
+#define test64 test
+
+#elif defined(City)
+
+#include "City.h"
+static void CityHash64_test ( const void * key, int len, uint32_t seed, void *out) {
+  *(uint64*)out = CityHash64WithSeed((const char *)key,len,seed);
+}
+
+#define test CityHash64_test
 #define test64 test
 
 #elif defined(METRO)
@@ -63,7 +93,7 @@ static void metro_test(const void *key, int len, uint32_t seed, void *out) {
 #define test metro_test
 #define test64 test
 
-#elif defined(MeowHash)
+#elif defined(oldMeowHash)
 
 #ifdef _MSC_VER
 typedef unsigned __int32 uint32_t;
@@ -79,6 +109,27 @@ typedef unsigned __int64 uint64_t;
 
 static void meowhash_test(const void *key, int len, uint32_t seed, void *out) {
   *(uint64_t*)out = MeowU64From (MeowHash_Accelerated (seed, len, key), 0);
+}
+
+#define test meowhash_test
+#define test64 test
+
+#elif defined(UseMeowHash)
+
+#ifdef _MSC_VER
+typedef unsigned __int32 uint32_t;
+typedef unsigned __int64 uint64_t;
+#else
+#include <stdint.h>
+#endif
+
+#include "meow_hash_x64_aesni.h"
+
+static void meowhash_test(const void *key, int len, uint32_t seed, void *out) {
+  meow_u128 Hash = MeowHash(MeowDefaultSeed, len, key);
+  long long unsigned Hash64 = MeowU64From(Hash, 0);
+
+  *(uint64_t*)out = Hash64;
 }
 
 #define test meowhash_test
@@ -103,7 +154,8 @@ static void mum_test64(const void *key, int len, uint32_t seed, void *out) {
 #endif
 
 
-#ifdef SPEEDBULK
+#if DATA_LEN == 0
+
 #include <stdlib.h>
 #include <stdio.h>
 uint32_t arr[16 * 256 * 1024];
@@ -118,150 +170,25 @@ int main () {
   printf ("%s:%llx\n", (size_t)arr & 0x7 ? "unaligned" : "aligned", out);
   return 0;
 }
-#endif
 
-#ifdef SPEED8
+#else
+
+int len = DATA_LEN;
+#include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
 /* We should use external to prevent optimizations for MUM after
    inlining.  Otherwise MUM results will be too good.  */
-int len = 8;
-#include <stdlib.h>
-#include <stdio.h>
 int main () {
-  int i, j; uint64_t k = rand (); uint64_t out;
+  int i, j; uint64_t k[(DATA_LEN + 7) / 8 * 8]; uint64_t out;
   
-  for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++)
-      test64 (&k, len, 2, &out), k = out;
-  printf ("8-byte: %s:%llx\n", (size_t)&k & 0x7 ? "unaligned" : "aligned", k);
-  return 0;
-}
-#endif
-
-#ifdef SPEED16
-int len = 16;
-#include <stdlib.h>
-#include <stdio.h>
-int main () {
-  int i, j; uint64_t k[2]; uint64_t out;
-  
-  k[0] = rand ();
-  k[1] = rand ();
+  assert (len <= 256);
+  for (i = 0; i < sizeof (k) / sizeof (uint64_t); i++) k[i] = rand ();
   for (j = 0; j < 128; j++)
     for (i = 0; i < 10000000; i++)
       test (k, len, 2, &out), k[0] = out;
-  printf ("16-byte: %s:%llx\n", (size_t)k & 0x7 ? "unaligned" : "aligned", out);
-  return 0;
-}
-#endif
-
-#ifdef SPEED32
-int len = 32;
-#include <stdlib.h>
-#include <stdio.h>
-int main () {
-  int i, j; uint64_t k[4]; uint64_t out;
-  
-  k[0] = rand (); k[1] = rand ();k[2] = rand (); k[3] = rand ();
-  for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++)
-      test (k, len, 2, &out), k[0] = out;
-  printf ("32-byte: %s:%llx\n", (size_t)k & 0x7 ? "unaligned" : "aligned", out);
-  return 0;
-}
-#endif
-
-#ifdef SPEED64
-int len = 64;
-#include <stdlib.h>
-#include <stdio.h>
-int main () {
-  int i, j; uint64_t k[8]; uint64_t out;
-  
-  k[0] = rand (); k[1] = rand ();k[2] = rand (); k[3] = rand ();
-  k[4] = rand (); k[5] = rand ();k[6] = rand (); k[7] = rand ();
-  for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++)
-      test (k, len, 2, &out), k[0] = out;
-  printf ("64-byte: %s:%llx\n", (size_t)k & 0x7 ? "unaligned" : "aligned", out);
-  return 0;
-}
-#endif
-
-#ifdef SPEED128
-int len = 128;
-#include <stdlib.h>
-#include <stdio.h>
-int main () {
-  int i, j; uint64_t k[16]; uint64_t out;
-  
-  k[0] = rand (); k[1] = rand ();k[2] = rand (); k[3] = rand ();
-  k[4] = rand (); k[5] = rand ();k[6] = rand (); k[7] = rand ();
-  k[8] = rand (); k[9] = rand ();k[10] = rand (); k[11] = rand ();
-  k[12] = rand (); k[13] = rand ();k[14] = rand (); k[15] = rand ();
-  for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++)
-      test (k, len, 2, &out), k[0] = out;
-  printf ("128-byte: %s:%llx\n", (size_t)k & 0x7 ? "unaligned" : "aligned", out);
+  printf ("%d-byte: %s:%llx\n", len, (size_t)k & 0x7 ? "unaligned" : "aligned", out);
   return 0;
 }
 
-#endif
-
-#ifdef SPEED256
-int len = 256;
-#include <stdlib.h>
-#include <stdio.h>
-int main () {
-  int i, j; uint64_t k[32]; uint64_t out;
-  
-  k[0] = rand (); k[1] = rand ();k[2] = rand (); k[3] = rand ();
-  k[4] = rand (); k[5] = rand ();k[6] = rand (); k[7] = rand ();
-  k[8] = rand (); k[9] = rand ();k[10] = rand (); k[11] = rand ();
-  k[12] = rand (); k[13] = rand ();k[14] = rand (); k[15] = rand ();
-  k[16] = rand (); k[17] = rand ();
-  k[18] = rand (); k[19] = rand ();k[20] = rand (); k[21] = rand ();
-  k[22] = rand (); k[23] = rand ();k[24] = rand (); k[25] = rand ();
-  k[26] = rand (); k[27] = rand ();
-  k[28] = rand (); k[29] = rand ();k[30] = rand (); k[31] = rand ();
-  for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++)
-      test (k, len, 2, &out), k[0] = out;
-  printf ("256-byte: %s:%llx\n", (size_t)k & 0x7 ? "unaligned" : "aligned", out);
-  return 0;
-}
-
-#endif
-
-#ifdef SPEED5
-/* We should use external to prevent optimizations for MUM after
-   inlining.  Otherwise MUM results will be too good.  */
-int len = 5;
-#include <stdlib.h>
-#include <stdio.h>
-int main () {
-  int i, j; uint64_t k = rand (); uint64_t out;
-  
-  for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++)
-      test (&k, len, 2, &out), k = out;
-  printf ("5-byte: %s:%llx\n", (size_t)&k & 0x7 ? "unaligned" : "aligned", k);
-  return 0;
-}
-#endif
-
-#ifdef SPEED6
-/* We should use external to prevent optimizations for MUM after
-   inlining.  Otherwise MUM results will be too good.  */
-int len = 6;
-#include <stdlib.h>
-#include <stdio.h>
-int main () {
-  int i, j; uint64_t k = rand (); uint64_t out;
-  
-  for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++)
-      test (&k, len, 2, &out), k = out;
-  printf ("6-byte: %s:%llx\n", (size_t)&k & 0x7 ? "unaligned" : "aligned", k);
-  return 0;
-}
 #endif
