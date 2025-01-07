@@ -4,9 +4,13 @@
 //   Oct 31 2010: published framework, disclaimer ShortHash isn't right
 //   Nov 7 2010: disabled ShortHash
 //   Oct 31 2011: replace End, ShortMix, ShortEnd, enable ShortHash again
+//   April 10 2012: buffer overflow on platforms without unaligned reads
+//   July 12 2012: was passing out variables in final to in/out in short
+//   July 30 2012: I reintroduced the buffer overflow
+//   August 5 2012: SpookyV2: d = should be d += in short hash, and remove extra mix from long hash
 
 #include <memory.h>
-#include "Spooky.h"
+#include "SpookyV2.h"
 
 #define ALLOW_UNALIGNED_READS 1
 
@@ -20,7 +24,7 @@ void SpookyHash::Short(
     uint64 *hash1,
     uint64 *hash2)
 {
-    uint64 buf[sc_numVars];
+    uint64 buf[2*sc_numVars];
     union 
     { 
         const uint8 *p8; 
@@ -69,7 +73,7 @@ void SpookyHash::Short(
     }
     
     // Handle the last 0..15 bytes, and its length
-    d = ((uint64)length) << 56;
+    d += ((uint64)length) << 56;
     switch (remainder)
     {
     case 15:
@@ -174,10 +178,9 @@ void SpookyHash::Hash128(
     memcpy(buf, end, remainder);
     memset(((uint8 *)buf)+remainder, 0, sc_blockSize-remainder);
     ((uint8 *)buf)[sc_blockSize-1] = remainder;
-    Mix(buf, h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11);
     
     // do some final mixing 
-    End(h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11);
+    End(buf, h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11);
     *hash1 = h0;
     *hash2 = h1;
 }
@@ -304,6 +307,8 @@ void SpookyHash::Final(uint64 *hash1, uint64 *hash2)
     // init the variables
     if (m_length < sc_bufSize)
     {
+        *hash1 = m_state[0];
+        *hash2 = m_state[1];
         Short( m_data, m_length, hash1, hash2);
         return;
     }
@@ -328,18 +333,17 @@ void SpookyHash::Final(uint64 *hash1, uint64 *hash2)
     {
         // m_data can contain two blocks; handle any whole first block
         Mix(data, h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11);
-	data += sc_numVars;
-	remainder -= sc_blockSize;
+        data += sc_numVars;
+        remainder -= sc_blockSize;
     }
 
     // mix in the last partial block, and the length mod sc_blockSize
     memset(&((uint8 *)data)[remainder], 0, (sc_blockSize-remainder));
 
     ((uint8 *)data)[sc_blockSize-1] = remainder;
-    Mix(data, h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11);
     
     // do some final mixing
-    End(h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11);
+    End(data, h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11);
 
     *hash1 = h0;
     *hash2 = h1;

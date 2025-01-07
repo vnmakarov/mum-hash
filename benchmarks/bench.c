@@ -1,6 +1,6 @@
 #if defined(Spooky)
 
-#include "Spooky.h"
+#include "SpookyV2.h"
 static void SpookyHash64_test (const void *key, int len, uint32_t seed, void *out) {
   *(uint64_t *) out = SpookyHash::Hash64 (key, len, seed);
 }

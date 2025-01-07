@@ -18,7 +18,7 @@ CXX=${CXX:-c++}
 
 if test x${MUM_ONLY} == x; then
     echo compiling Spooky
-    ${CXX} ${COPTFLAGS} ${LTO} -w -c Spooky.cpp || exit 1
+    ${CXX} ${COPTFLAGS} ${LTO} -w -c SpookyV2.cpp || exit 1
     echo compiling City
     ${CXX} ${COPTFLAGS} ${LTO} -w -c City.cpp || exit 1
     echo compiling t1ha
@@ -90,7 +90,7 @@ for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 64 128 256 0;do
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V1 -I../ bench.c && run "01MUM-V1" "./a.out"
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V2 -I../ bench.c && run "02MUM-V2" "./a.out"
     if test x${MUM_ONLY} == x; then
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && run "03Spooky" "./a.out"
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky SpookyV2.o bench.c && run "03Spooky" "./a.out"
 	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && run "04City" "./a.out"
 	if test "$check_xxHash" == yes;then
 	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash bench.c && run "05xxHash" "./a.out"
@@ -120,4 +120,4 @@ for i in `awk -F: '{print $1}' $temp3|sort|uniq`; do
 done
 echo
 
-rm -rf ./a.out $temp $temp2 $temp3 Spooky.o City.o siphash24.o t1ha*.o
+rm -rf ./a.out $temp $temp2 $temp3 SpookyV2.o City.o siphash24.o t1ha*.o
