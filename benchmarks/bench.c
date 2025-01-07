@@ -94,7 +94,7 @@ static void metro_test (const void *key, int len, uint32_t seed, void *out) {
 #define test metro_test
 #define test64 test
 
-#elif defined(oldMeowHash)
+#elif defined(MeowHash)
 
 #ifdef _MSC_VER
 typedef unsigned __int32 uint32_t;
@@ -103,34 +103,11 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 #endif
 
-#include <emmintrin.h>
-#include <wmmintrin.h>
 #include "meow_intrinsics.h"
 #include "meow_hash.h"
 
 static void meowhash_test (const void *key, int len, uint32_t seed, void *out) {
   *(uint64_t *) out = MeowU64From (MeowHash_Accelerated (seed, len, key), 0);
-}
-
-#define test meowhash_test
-#define test64 test
-
-#elif defined(UseMeowHash)
-
-#ifdef _MSC_VER
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-#else
-#include <stdint.h>
-#endif
-
-#include "meow_hash_x64_aesni.h"
-
-static void meowhash_test (const void *key, int len, uint32_t seed, void *out) {
-  meow_u128 Hash = MeowHash (MeowDefaultSeed, len, key);
-  long long unsigned Hash64 = MeowU64From (Hash, 0);
-
-  *(uint64_t *) out = Hash64;
 }
 
 #define test meowhash_test
