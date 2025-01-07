@@ -46,7 +46,7 @@ skip () {
 print_time() {
     title="$1"
     secs=$2
-    printf '%8.2f |' `percent $base_time $secs "$title"`
+    printf '%-.2f %5.1fs|' `percent $base_time $secs "$title"` $secs
 }
 
 TASKSET=""
@@ -69,13 +69,11 @@ run () {
   print_time "$title" $secs
 }
 
-echo -n '| Length  | MUM-V3  | MUM-V1  | MUM-V2  | Spooky  |  City   | xxHash  | xxHash3 |  t1ha2  |SipHash24|  Metro  |'
-if test `uname -m` == x86_64; then echo 'MeowHash |'; else echo; fi
-echo -n ':---------|--------:|--------:|--------:|--------:|--------:|--------:|--------:|--------:|--------:|--------:|'
-if test `uname -m` == x86_64; then echo '--------:|'; else echo; fi
+echo '| Length   |  MUM-V3   |  MUM-V1   |  MUM-V2   |  Spooky   |   City    |  xxHash   |  xxHash3  |   t1ha2   | SipHash24 |   Metro   |'
+echo ':----------|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|'
 
-for i in 3 4;do # 5 6 7 8 9 10 11 12 13 14 15 16 32 64 128 256 0;do
-    if test $i == 0; then echo -n '| Bulk    |'; else printf '|%3d bytes|' $i;fi
+for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 64 128 256 0;do
+    if test $i == 0; then echo -n '| Bulk     |'; else printf '|%3d bytes |' $i;fi
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && run "00MUM-V3" "./a.out" first
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V1 -I../ bench.c && run "01MUM-V1" "./a.out"
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V2 -I../ bench.c && run "02MUM-V2" "./a.out"
@@ -87,23 +85,19 @@ for i in 3 4;do # 5 6 7 8 9 10 11 12 13 14 15 16 32 64 128 256 0;do
 	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -It1ha -DT1HA2 t1ha*.o bench.c && run "07t1ha2" "./a.out"
 	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && run "08Siphash24" "./a.out"
 	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && run "09Metro" "./a.out"
-	if test `uname -m` == x86_64; then
-	    # Don't do LTO for MUM or MeowHash.  Otherwise it will be optimized too much and results will be too good on some targets
-	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -mavx2 -maes -DUseMeowHash -I../ bench.c && run "10Meowhash" "./a.out"
-	fi
     fi
     echo
 done
 
-echo -n '| Average |'
+echo -n '| Average  |'
 for i in `awk -F: '{print $1}' $temp3|sort|uniq`; do
-    printf '%8.2f |' `awk -F: -v name="$i" 'name==$1 {f = f + $2; n++} END {printf "%0.2f\n", f / n}' $temp3`
+    printf '%-10.2f |' `awk -F: -v name="$i" 'name==$1 {f = f + $2; n++} END {printf "%0.2f\n", f / n}' $temp3`
 done
 echo
 
-echo -n '| Geomean |'
+echo -n '| Geomean  |'
 for i in `awk -F: '{print $1}' $temp3|sort|uniq`; do
-    printf '%8.2f |' `awk -F: -v name="$i" 'BEGIN{f=1.0} name==$1 {f = f * $2; n++} END {printf "%0.2f\n", exp (log(f)/n)}' $temp3`
+    printf '%-10.2f |' `awk -F: -v name="$i" 'BEGIN{f=1.0} name==$1 {f = f * $2; n++} END {printf "%0.2f\n", exp (log(f)/n)}' $temp3`
 done
 echo
 
