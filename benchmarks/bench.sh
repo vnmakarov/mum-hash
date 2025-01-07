@@ -71,9 +71,17 @@ run () {
 
 mach=`uname -m`
 check_meow=`(test $mach == x86_64 || test $mach == aarch64) && echo yes`
-echo -n '| Length   |  MUM-V3   |  MUM-V1   |  MUM-V2   |  Spooky   |   City    |  xxHash   |  xxHash3  |   t1ha2   | SipHash24 |   Metro   |'
+
+check_meow=
+check_xxHash=
+
+echo -n '| Length   |  MUM-V3   |  MUM-V1   |  MUM-V2   |  Spooky   |   City    |'
+if test "$check_xxHash" == yes; then echo -n '  xxHash   |';fi
+echo -n '  xxHash3  |   t1ha2   | SipHash24 |   Metro   |'
 if test "$check_meow" == yes; then echo ' MeowHash  |'; else echo; fi
-echo -n ':----------|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|'
+echo -n ':----------|:---------:|:---------:|:---------:|:---------:|:---------:|'
+if test "$check_xxHash" == yes; then echo -n ':---------:|';fi
+echo -n ':---------:|:---------:|:---------:|:---------:|'
 if test "$check_meow" == yes; then echo ':---------:|'; else echo; fi
 
 for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 64 128 256 0;do
@@ -84,7 +92,9 @@ for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 64 128 256 0;do
     if test x${MUM_ONLY} == x; then
 	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky Spooky.o bench.c && run "03Spooky" "./a.out"
 	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && run "04City" "./a.out"
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash bench.c && run "05xxHash" "./a.out"
+	if test "$check_xxHash" == yes;then
+	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash bench.c && run "05xxHash" "./a.out"
+	fi
 	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -Dxxh3 bench.c && run "06xxh3" "./a.out"
 	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -It1ha -DT1HA2 t1ha*.o bench.c && run "07t1ha2" "./a.out"
 	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && run "08Siphash24" "./a.out"
