@@ -229,7 +229,12 @@ static _MUM_INLINE uint64_t _MUM_OPTIMIZE ("unroll-loops")
     result = _mum (result, _mum_unroll_prime);
   }
   n = len / sizeof (uint64_t);
+#if defined(MUM_V1) || defined(MUM_V2) || defined(MUM_V3)
   for (i = 0; i < n; i++) result ^= _mum (_mum_le (((uint64_t *) str)[i]), _mum_primes[i]);
+#else
+  for (i = 0; i < n; i++)
+    result ^= _mum (_mum_le (((uint64_t *) str)[i]) + _mum_primes[i], _mum_primes[i]);
+#endif
   len -= n * sizeof (uint64_t);
   str += n * sizeof (uint64_t);
   switch (len) {
@@ -237,22 +242,40 @@ static _MUM_INLINE uint64_t _MUM_OPTIMIZE ("unroll-loops")
     u64 = _mum_le32 (*(uint32_t *) str);
     u64 |= _mum_le16 (*(uint16_t *) (str + 4)) << 32;
     u64 |= (uint64_t) str[6] << 48;
+#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
+    u64 += _mum_primes[0];
+#endif
     return result ^ _mum (u64, _mum_tail_prime);
-  case 6:
-    u64 = _mum_le32 (*(uint32_t *) str);
-    u64 |= _mum_le16 (*(uint16_t *) (str + 4)) << 32;
+  case 6: u64 = _mum_le32 (*(uint32_t *) str); u64 |= _mum_le16 (*(uint16_t *) (str + 4)) << 32;
+#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
+    u64 += _mum_primes[1];
+#endif
     return result ^ _mum (u64, _mum_tail_prime);
-  case 5:
-    u64 = _mum_le32 (*(uint32_t *) str);
-    u64 |= (uint64_t) str[4] << 32;
+  case 5: u64 = _mum_le32 (*(uint32_t *) str); u64 |= (uint64_t) str[4] << 32;
+#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
+    u64 += _mum_primes[2];
+#endif
     return result ^ _mum (u64, _mum_tail_prime);
-  case 4: u64 = _mum_le32 (*(uint32_t *) str); return result ^ _mum (u64, _mum_tail_prime);
-  case 3:
-    u64 = _mum_le16 (*(uint16_t *) str);
-    u64 |= (uint64_t) str[2] << 16;
+  case 4: u64 = _mum_le32 (*(uint32_t *) str);
+#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
+    u64 += _mum_primes[3];
+#endif
     return result ^ _mum (u64, _mum_tail_prime);
-  case 2: u64 = _mum_le16 (*(uint16_t *) str); return result ^ _mum (u64, _mum_tail_prime);
-  case 1: u64 = str[0]; return result ^ _mum (u64, _mum_tail_prime);
+  case 3: u64 = _mum_le16 (*(uint16_t *) str); u64 |= (uint64_t) str[2] << 16;
+#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
+    u64 += _mum_primes[4];
+#endif
+    return result ^ _mum (u64, _mum_tail_prime);
+  case 2: u64 = _mum_le16 (*(uint16_t *) str);
+#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
+    u64 += _mum_primes[5];
+#endif
+    return result ^ _mum (u64, _mum_tail_prime);
+  case 1: u64 = str[0];
+#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
+    u64 += _mum_primes[6];
+#endif
+    return result ^ _mum (u64, _mum_tail_prime);
   }
   return result;
 }
@@ -265,8 +288,10 @@ static _MUM_INLINE uint64_t _mum_final (uint64_t h) {
 #elif defined(MUM_V2)
   h ^= _mum_rotl (h, 33);
   h ^= _mum (h, _mum_finish_prime1);
-#else
+#elif defined(MUM_V3)
   h = _mum (h, h);
+#else
+  h = _mum (_mum_rotl (h, 23), h);
 #endif
   return h;
 }
@@ -359,7 +384,7 @@ static _MUM_INLINE size_t mum_hash64 (uint64_t key, uint64_t seed) {
 }
 
 /* Hash data KEY of length LEN and SEED. The hash depends on the target endianess and the unroll
- * factor. */
+   factor. */
 static _MUM_INLINE uint64_t mum_hash (const void *key, size_t len, uint64_t seed) {
 #if _MUM_UNALIGNED_ACCESS
   return _mum_final (_mum_hash_aligned (seed + len, key, len));
