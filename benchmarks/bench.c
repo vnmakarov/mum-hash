@@ -158,7 +158,7 @@ int len = DATA_LEN;
    inlining.  Otherwise MUM results will be too good.  */
 int main () {
   int i, j;
-  uint64_t k[(DATA_LEN + 7) / 8 * 8];
+  uint64_t k[(DATA_LEN + 7) / 8];
   uint64_t out;
 
   assert (len <= 256);
