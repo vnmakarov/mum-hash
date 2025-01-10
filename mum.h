@@ -288,10 +288,8 @@ static _MUM_INLINE uint64_t _mum_final (uint64_t h) {
 #elif defined(MUM_V2)
   h ^= _mum_rotl (h, 33);
   h ^= _mum (h, _mum_finish_prime1);
-#elif defined(MUM_V3)
-  h = _mum (h, h);
 #else
-  h = _mum (_mum_rotl (h, 23), h);
+  h = _mum (h, h);
 #endif
   return h;
 }
