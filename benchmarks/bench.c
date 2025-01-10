@@ -157,14 +157,18 @@ int len = DATA_LEN;
 /* We should use external to prevent optimizations for MUM after
    inlining.  Otherwise MUM results will be too good.  */
 int main () {
-  int i, j;
+  int i, j, n;
   uint64_t k[(DATA_LEN + 7) / 8];
   uint64_t out;
 
   assert (len <= 256);
-  for (i = 0; i < sizeof (k) / sizeof (uint64_t); i++) k[i] = rand ();
+  for (i = 0; i < sizeof (k) / sizeof (uint64_t); i++) k[i] = i;
   for (j = 0; j < 128; j++)
-    for (i = 0; i < 10000000; i++) test (k, len, 2, &out), k[0] = out;
+    for (n = i = 0; i < 10000000; i++) {
+      test (k, len, 2, &out);
+      if (n == (DATA_LEN + 7) / 8) n = 0;
+      k[n++] = out;
+    }
   printf ("%d-byte: %s:%llx\n", len, (size_t) k & 0x7 ? "unaligned" : "aligned", out);
   return 0;
 }
