@@ -151,6 +151,7 @@ int main () {
 #else
 
 int len = DATA_LEN;
+uint64_t k[(DATA_LEN + 7) / 8];
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -158,17 +159,12 @@ int len = DATA_LEN;
    inlining.  Otherwise MUM results will be too good.  */
 int main () {
   int i, j, n;
-  uint64_t k[(DATA_LEN + 7) / 8];
   uint64_t out;
 
   assert (len <= 256);
   for (i = 0; i < sizeof (k) / sizeof (uint64_t); i++) k[i] = i;
   for (j = 0; j < 128; j++)
-    for (n = i = 0; i < 10000000; i++) {
-      test (k, len, 2, &out);
-      if (n == (DATA_LEN + 7) / 8) n = 0;
-      k[n++] = out;
-    }
+    for (n = i = 0; i < 10000000; i++) test (k, len, 2, &out), k[0] = out;
   printf ("%d-byte: %s:%llx\n", len, (size_t) k & 0x7 ? "unaligned" : "aligned", out);
   return 0;
 }
