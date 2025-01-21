@@ -1,42 +1,12 @@
-# Update (May 12, 2019)
-* Mum-hash **version 3** has been released
-* Version 3 has **faster hashing for small and long keys**
-  * Version 3 is default.  To switch on version 1 or version 2, please define
-    macro MUM_V1 or MUM_V2 before inclusion of mum.h
-* Version 3 has **higher quality hashing** comparing to version 2
-  * Although version 2 passed all the tests of appleby-smhasher, it did not pass strict Avalanche tests of demerphq-smhasher
-  * Version 3 fixed this problem and now version 3 (as version 1) passes all tests of demerphq-smhasher
-* Although I have a high quality x86_64 vectorized mum-hash
-  implementation (using pmuludq256/pshufd256/pxo256) which achieves
-  Meow hash speed on very long keys I decided not to add this
-  implementation to version 3 as it complicates the code, makes code
-  slower on targets not having analogous vector instructions, and as the
-  speed of hashing long keys is rarely used for hash tables
-
-# Update (Apr 1, 2019)
-* Meow hash is updated to version 0.4
-* Benchmark results for x86-64 were updated
-
-# Update (Oct 31, 2018)
-* A **new version of mum hash** was created (version 2 or Halloween version)
-* The new version works **faster for short keys** which are a majority of hash table cases usages
-* The new version also passes all tests of SMHasher
-* The old version still can be used by definining macro `MUM_V1` before compiling `mum.h`
-  * When `MUM_V1` is defined, you will get the same hashes as previously
-* The new version was also **simplified** by removing specialized code using features of x86-64 CPU with BMI2 flag
-  * This has a tiny impact on mum hash performance
-* I posted performance results for more fresh CPUs (i7-8700K, Power9, and APM X-Gene CPU Potenza A3)
-* I also added performance results for a new hash, [**Meow hash**](https://github.com/cmuratori/meow_hash)
-  * Meow hash is based on usage of x86-64 AES insns
-  * Meow hash is the fastest hash for very long keys but it is not suitable for hash tables
-    * Meow is too slow for most hash table cases
-    * Meow can be used **only for x86-64**
-    * Meow hash requires **aligned data** because AES insns needs aligned data
-* **MUM PRNG performance was improved**
-  * A performance bug (preventing inlining of code specialized for different architectures) was fixed 
-* **MUM-512 performance was improved**
-  * The same performance bug was fixed but in a different way
-
+# Update (2025)
+* New **Vector mum-hash** (vmum) has been released
+* New hashing speed data for modern CPUs are provided (see below) for
+  vmum and other different famous hashing algorithms
+* Mum v3 were updated.  It became more machine-independent and there
+  is option make it pass **all tests** of more rigorous version of
+  [SMHasher](https://github.com/rurban/smhasher)
+  (see datail below).
+	
 # MUM Hash
 * MUM hash is a **fast non-cryptographic hash function**
   suitable for different hash table implementations
@@ -49,22 +19,26 @@
   * I'd like to call it Multiply and Reduce.  Unfortunately, MUR
     (MUltiply and Rotate) is already taken for famous hashing
     technique designed by Austin Appleby
-  * I've chosen the name also as I am releasing it on Mother's day
+  * I've chosen the name also as the 1st release happened on Mother's day
+* To use mum you just need one header file (mum.h)
 * MUM hash passes **all** [SMHasher](https://github.com/aappleby/smhasher) tests
   * For comparison, only 4 out of 15 non-cryptographic hash functions
     in SMHasher passes the tests, e.g. well known FNV, Murmur2,
     Lookup, and Superfast hashes fail the tests
-* MUM algorithm is **simpler** than City64 and Spooky ones
-* MUM is specifically **designed to be fast for 64-bit CPUs** (Sorry, I did not want to
-  spend my time on dying architectures)
+* MUM V3 hash does not pass the following tests of more rigourous
+  version of [SMHasher](https://github.com/rurban/smhasher):
+  * It fails on perlin noise and bad seeds tests.  It means it still
+    qualitive enough for the most applications
+  * To make MUM V3 to pass Rurban SMHasher macro `MUM_QUALITY` has been
+    added.  Compilation with this defined macro make MUM V3 to pass
+    all tests of Rurban SMHasher.  The slowdown is about 5% in average
+    or 10% at most on keys of length 8.
+* For historic reasons mum.h contains code for older version V1 and
+  V2.  You can switch them on by defining macros **MUM_V1** and **MUM_V2**
+* MUM algorithm is **simpler** VMUM one
+* MUM is specifically **designed to be fast for 64-bit CPUs**
   * Still MUM will work for 32-bit CPUs and it will be sometimes
     faster Spooky and City
-* On x86-64 MUM hash is **faster** than City64 and Spooky on all tests except for one
-  test for the bulky speed
-  * Starting with 240-byte strings, City uses Intel SSE4.2 crc32 instruction
-  * I could use the same instruction but I don't want to complicate the algorithm
-  * In typical scenario, such long strings are rare.  Usually another
-    interface (see `mum_hash_step`) is used for hashing big data structures
 * MUM has a **fast startup**.  It is particular good to hash small keys
   which are a majority of hash table applications
 
@@ -81,24 +55,52 @@
   bit values are used for the multiplication
 * When all primes are used once, the state is randomized and the same
   prime numbers are used again for subsequent data randomization
-* Major loop is transformed to be **unrolled** by compiler to benefit from the
+* Major loop is formed to be **unrolled** by compiler to benefit from the
   compiler instruction scheduling optimization and OOO instruction
   execution in modern CPUs
-* AARCH64 128-bit result multiplication is very slow as it is
-  implemented by a GCC library function
-  * To use only 2 insns for such multiplication one GCC **asm extension**
-    was added
-    
-   
-# MUM benchmarking vs Spooky, City64, xxHash64, MetroHash64, MeowHash, and SipHash24
+* MUM code does not contain asm code anymore. This makes MUM less
+  machine-dependent.  To have efficient mum implementation, the
+  compiler should support 128-bit integer
+  extension (true for GCC and Clang on many targets)
 
-* Here are the results of benchmarking MUM and the fastest
+# VMUM Hash
+* VMUM is a vector variant of mum hashing (see below)
+  * In comparison with mum v3, vmum considerally improves speed
+    of hashing mid-range to long-range length keys
+  * As for previous mum hashing, to use vmum you just need one header
+    file (vmum.h)
+  * vmum source code is considerably smaller than one of extremely
+    fast xxHash3 and th1ha2 and compete them on hashing speed
+  * vmum passes more rigorous version of
+    [SMHasher](https://github.com/rurban/smhasher)
+   
+# VMUM implementation details
+* For long keys vmum uses vector insns:
+  * AVX2 256-bit vector insns on x86-64
+  * Neon 128-bit vector insns on aarch64
+  * Altivec 128-bit vector insns on ppc64
+  * there is scalar implementation of the vector insns too for other
+    targets
+	* this could be useful for understanding used vector operations
+* You can add usage of vector insns for other targets.  For this you
+    just need to add small functions `_vmum_update_block`,
+    `_vmum_zero_block`, and `_vmum_fold_block`
+  * For beneficial usage of vector insns the target should have unsigned `32 x 32-bit ->
+    64-bit` vector multiplication
+* To run vector insns in parallel on OOO CPUs, two vmum code loops are formed
+  to be **unrolled** by compiler into one basic block
+* I experimented a lot with other vector insns and found that usage of
+  carry-less (or polynomial) vector multiplication insns does not work
+  well enough for hashing
+
+# VMUM and MUM benchmarking vs other famous hash functions
+
+* Here are the results of benchmarking VMUM and MUM with the fastest
   non-cryptographic hash functions I know:
   * Google City64 (sources are taken from SMHasher)
   * Bob Jenkins Spooky (sources are taken from SMHasher)
-  * Yann Collet's xxHash64 (sources are taken from the
+  * Yann Collet's xxHash3 (sources are taken from the
     [original repository](https://github.com/Cyan4973/xxHash))
-* Murmur hash functions are slower so I don't compare it here
 * I also added J. Aumasson and D. Bernstein's
   [SipHash24](https://github.com/veorq/SipHash) for the comparison as it
   is a popular choice for hash table implementation these days
@@ -108,84 +110,133 @@
     * metro hash is not portable as others functions as it does not deal
       with unaligned accesses problem on some targets
     * metro hash will produce different hash for LE/BE targets
-    * some people on hackernews pointed out that the algorithm is very
-      close to xxHash one but still it is much faster xxHash
-* Measurements were done on 3 different architecture machines:
-  * 4.7 GHz Intel i7-8700K
-  * 3.8 GHz Power9
-  * 2.4 GHz APM X-Gene CPU Potenza A3
+* Measurements were done on 4 different architecture machines:
+  * AMD Ryzen 9900X
+  * Intel i5-1300K
+  * IBM Power10
+  * Apple M4 10 cores (mac mini)
+* Hashing 10,000 of 16MB keys (bulk)
+* Hashing 1,280M keys for all other length keys
 * Each test was run 3 times and the minimal time was taken
-  * GCC-7.3.1 was used for Intel machine, GCC-8.2.1 was used AARCH64, and GCC-4.9 was used for Power9
+  * GCC-14.2.1 was used on AMD and M4 machine, GCC-12.3.1 on Intel
+    machine, GCC-11.5.0 was used on Power10
   * `-O3` was used for all compilations
-  * The strings were generated by `rand` calls
-  * The strings were aligned to see a hashing speed better and to permit runs for MeowHash and Metro
-  * No constant propagation for string length is forced.  Otherwise,
-    the results for MUM hash would be even better
-  * The best results in the table below are highlighted.
+  * The keys were generated by `rand` calls
+  * The keys were aligned to see a hashing speed better and to permit runs for Metro
   * Some people complaint that my comparison is unfair as most hash functions are not inlined
     * I believe that the interface is the part of the implementation.  So when
       the interface does not provide an easy way for inlining, it is an
       implementation pitfall
     * Still to address the complaints I added `-flto` for benchmarking all hash
-      functions excluding MUM.  This option makes cross-file inlining
-    * xxHash64 results became worse for small strings and better for the bulk speed test
-    * All results for other functions improved, sometimes quite a lot
+      functions excluding MUM and VMUM.  This option makes cross-file inlining
+* Here are graphs summarizing the measurements:
+
+![AMD](./benchmarks/amd.png)
+
+![INTEL](./benchmarks/intel.png)
+
+![M4](./benchmarks/m4.png)
+
+![Power10](./benchmarks/power10.png)
+
+* Here are table variants of the measurements.  They also contains
+  time spent for hashing:
   
-# Intel i7-9700K
-* Hashing 10,000 of 16MB strings
-* Hashing 1,280M strings for all other length strings
+* AMD Ryzen 9900X:
 
-|        | Spooky   | City     | xxHash   | SipHash24   | Metro    | MeowHash  | MUM-V1   | MUM-V2    | MUM-V3    |
-:--------|---------:|---------:|---------:|------------:|---------:|----------:|---------:|----------:|----------:|
-|5-byte  |   6.62s  |   8.78s  |   6.80s  |   10.07s    |   5.76s  |  11.25s   |   6.57s  |   5.56s   | **4.85s** | 
-|8-byte  |   6.30s  |   8.81s  |   6.54s  |   12.89s    |   4.18s  |  11.25s   |   4.74s  |   3.69s   | **2.88s** | 
-|16-byte |  12.64s  |   8.20s  |   8.11s  |   16.13s    |   5.71s  |   9.42s   |   5.85s  |   4.75s   | **3.95s** | 
-|32-byte |  13.20s  |   9.60s  |  11.60s  |   22.40s    |  11.72s  |   9.42s   |   6.83s  |   5.52s   | **4.71s** | 
-|64-byte |  19.40s  |  10.60s  |  12.86s  |   36.70s    |  12.53s  |   9.42s   |   9.35s  |   8.79s   | **6.54s** | 
-|128-byte|  32.58s  |  14.25s  |  15.49s  |   63.82s    |  14.63s  |**10.46s** |  13.64s  |  13.01s   |  11.53s   | 
-|Bulk    |   9.74s  |   9.17s  |   9.59s  |   48.63s    |   8.89s  | **4.65s** |  10.33s  |  10.38s   |   7.93s   | 
+| Length    |   VMUM    |  MUM-V3   |  MUM-V2   |  Spooky   |   City    |  xxHash3  |   t1ha2   | SipHash24 |   Metro   |
+|:----------|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
+|   3 bytes |1.00   4.6s|1.00   4.6s|0.88   5.2s|0.78   5.9s|0.61   7.5s|0.96   4.8s|0.62   7.4s|0.63   7.3s|0.70   6.6s|
+|   4 bytes |1.00   2.7s|1.10   2.5s|0.86   3.2s|0.55   5.0s|0.39   7.1s|0.71   3.9s|0.69   4.0s|0.36   7.7s|0.75   3.6s|
+|   5 bytes |1.00   4.6s|1.00   4.6s|0.87   5.2s|0.80   5.7s|0.64   7.1s|0.87   5.2s|0.62   7.4s|0.60   7.6s|0.87   5.2s|
+|   6 bytes |1.00   4.6s|1.00   4.6s|0.87   5.2s|0.77   5.9s|0.64   7.1s|0.87   5.2s|0.62   7.4s|0.58   7.9s|0.87   5.2s|
+|   7 bytes |1.00   4.8s|1.00   4.8s|0.88   5.5s|0.78   6.2s|0.68   7.1s|0.91   5.2s|0.65   7.4s|0.60   8.0s|0.75   6.4s|
+|   8 bytes |1.00   2.7s|1.10   2.5s|0.86   3.2s|0.55   5.0s|0.39   7.1s|0.52   5.2s|0.70   3.9s|0.33   8.2s|0.75   3.6s|
+|   9 bytes |1.00   2.8s|0.99   2.8s|0.79   3.5s|0.55   5.0s|0.25  10.9s|0.42   6.6s|0.38   7.3s|0.33   8.2s|0.55   5.0s|
+|  10 bytes |1.00   2.8s|0.99   2.8s|0.79   3.5s|0.55   5.0s|0.25  10.9s|0.42   6.6s|0.38   7.3s|0.33   8.3s|0.55   5.0s|
+|  11 bytes |1.00   2.8s|0.99   2.8s|0.79   3.5s|0.55   5.0s|0.25  11.0s|0.42   6.6s|0.38   7.3s|0.34   8.3s|0.45   6.2s|
+|  12 bytes |1.00   2.8s|0.99   2.8s|0.80   3.5s|0.55   5.0s|0.25  10.9s|0.42   6.6s|0.38   7.3s|0.34   8.3s|0.55   5.0s|
+|  13 bytes |1.00   2.8s|0.99   2.8s|0.79   3.5s|0.55   5.0s|0.25  10.9s|0.42   6.6s|0.37   7.4s|0.33   8.3s|0.45   6.2s|
+|  14 bytes |1.00   2.8s|0.98   2.8s|0.79   3.5s|0.55   5.0s|0.25  11.0s|0.42   6.6s|0.38   7.3s|0.34   8.3s|0.45   6.2s|
+|  15 bytes |1.00   2.8s|0.99   2.8s|0.79   3.5s|0.55   5.0s|0.25  11.0s|0.42   6.6s|0.38   7.3s|0.33   8.3s|0.38   7.3s|
+|  16 bytes |1.00   2.8s|1.02   2.7s|0.81   3.4s|0.25  11.0s|0.38   7.3s|0.87   3.2s|0.55   5.1s|0.27  10.4s|0.58   4.8s|
+|  32 bytes |1.00   3.0s|0.92   3.3s|0.75   4.1s|0.28  10.9s|0.37   8.2s|0.95   3.2s|0.40   7.5s|0.21  14.4s|0.31   9.8s|
+|  48 bytes |1.00   3.3s|0.96   3.5s|0.61   5.4s|0.20  16.7s|0.39   8.4s|1.04   3.2s|0.45   7.4s|0.18  18.7s|0.27  12.4s|
+|  64 bytes |1.00   3.7s|0.81   4.5s|0.60   6.1s|0.22  16.8s|0.44   8.4s|1.14   3.2s|0.64   5.8s|0.16  22.9s|0.35  10.6s|
+|  96 bytes |1.00   4.2s|0.75   5.7s|0.55   7.7s|0.19  22.5s|0.34  12.7s|1.32   3.2s|0.61   7.0s|0.13  31.5s|0.38  11.3s|
+| 128 bytes |1.00   4.6s|0.67   6.9s|0.49   9.3s|0.16  28.3s|0.36  12.7s|1.43   3.2s|0.60   7.6s|0.11  40.0s|0.38  12.0s|
+| 192 bytes |1.00   7.0s|0.83   8.4s|0.56  12.4s|0.29  24.1s|0.48  14.7s|0.98   7.1s|0.70   9.9s|0.12  56.9s|0.52  13.4s|
+| 256 bytes |1.00   7.9s|0.77  10.2s|0.51  15.4s|0.32  24.5s|0.47  16.9s|0.56  14.1s|0.66  12.0s|0.11  74.6s|0.54  14.6s|
+| 512 bytes |1.00  13.9s|0.83  16.9s|0.50  27.7s|0.39  35.5s|0.51  27.5s|0.86  16.1s|0.65  21.3s|0.10 141.1s|0.61  23.0s|
+|1024 bytes |1.00  16.5s|0.52  31.8s|0.32  52.3s|0.31  54.1s|0.36  46.0s|0.84  19.7s|0.42  39.1s|0.06 275.3s|0.42  39.5s|
+| Bulk      |1.00   1.2s|0.32   3.9s|0.19   6.4s|0.24   5.1s|0.25   5.0s|0.46   2.7s|0.26   4.7s|0.04  34.1s|0.29   4.3s|
+| Average   |1.00       |0.90       |0.69       |0.46       |0.39       |0.76       |0.52       |0.29       |0.53       |
+| Geomean   |1.00       |0.87       |0.66       |0.41       |0.37       |0.70       |0.50       |0.23       |0.50       |
 
-# Power9 (3.8GHz)
+* Intel i5-13600K:
 
-|           |  Spooky| City64| xxHash64|SipHash24| Metro64  |  MUM-V1  |  MUM-V2  |  MUM-V3  |
-:-----------|-------:|------:|--------:|--------:|---------:|---------:|---------:|---------:|
-5 bytes     |  22.14s| 23.87s| 20.54s  |   45.06s|  18.01s  |  18.44s  |  18.29s  |**17.29s**|
-8 bytes     |  17.62s| 23.68s| 19.92s  |   54.13s|   9.82s  |   9.18s  |   7.55s  | **6.00s**|
-16 bytes    |  34.02s| 18.60s| 23.62s  |   61.19s|**15.75s**|  17.32s  |  17.47s  |  16.46s  |
-32 bytes    |  32.16s| 21.66s| 34.73s  |   75.72s|  27.82s  |  18.72s  |  18.87s  |**17.93s**|
-64 bytes    |  53.53s| 23.40s| 37.97s  |  104.23s|  29.88s  |  21.34s  |  20.42s  |**20.29s**|
-128 bytes   |  87.46s| 33.17s| 44.60s  |  193.19s|  38.73s  |  32.96s  |  30.90s  |**27.47s**|
-16MB        |  17.12s| 13.64s| 14.56s  |  116.85s|  12.22s  |  11.59s  |  11.56s  |**10.69s**|
+| Length    |   VMUM    |  MUM-V3   |  MUM-V2   |  Spooky   |   City    |  xxHash3  |   t1ha2   | SipHash24 |   Metro   |
+|-----------|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
+|   3 bytes |1.00   4.6s|1.00   4.5s|0.86   5.3s|0.65   7.0s|0.60   7.6s|0.90   5.0s|0.49   9.4s|0.46   9.9s|0.67   6.8s|
+|   4 bytes |1.00   4.3s|1.06   4.0s|0.90   4.8s|0.73   5.9s|0.51   8.4s|0.74   5.8s|0.76   5.6s|0.53   8.1s|0.81   5.3s|
+|   5 bytes |1.00   4.6s|1.00   4.5s|0.86   5.3s|0.71   6.4s|0.56   8.2s|0.79   5.8s|0.49   9.4s|0.46   9.9s|0.67   6.8s|
+|   6 bytes |1.00   4.6s|1.01   4.5s|0.86   5.3s|0.67   6.8s|0.56   8.2s|0.79   5.8s|0.49   9.4s|0.42  10.8s|0.67   6.8s|
+|   7 bytes |1.00   4.9s|1.01   4.9s|0.88   5.6s|0.69   7.1s|0.60   8.2s|0.85   5.8s|0.52   9.4s|0.44  11.0s|0.69   7.0s|
+|   8 bytes |1.00   4.3s|1.06   4.0s|0.89   4.8s|0.77   5.6s|0.52   8.2s|0.74   5.8s|0.99   4.3s|0.39  10.9s|1.06   4.0s|
+|   9 bytes |1.00   4.3s|1.00   4.3s|0.84   5.1s|0.77   5.6s|0.31  13.6s|0.50   8.6s|0.45   9.5s|0.39  10.9s|0.77   5.5s|
+|  10 bytes |1.00   4.3s|1.00   4.3s|0.85   5.1s|0.77   5.6s|0.32  13.6s|0.50   8.6s|0.45   9.5s|0.39  10.9s|0.77   5.5s|
+|  11 bytes |1.00   4.3s|1.00   4.3s|0.84   5.1s|0.77   5.6s|0.32  13.6s|0.50   8.6s|0.45   9.5s|0.39  10.9s|0.63   6.8s|
+|  12 bytes |1.00   4.3s|1.00   4.3s|0.85   5.1s|0.77   5.6s|0.32  13.6s|0.50   8.6s|0.45   9.5s|0.39  10.9s|0.77   5.5s|
+|  13 bytes |1.00   4.3s|1.00   4.3s|0.85   5.1s|0.77   5.6s|0.31  13.6s|0.50   8.6s|0.45   9.5s|0.39  10.9s|0.63   6.8s|
+|  14 bytes |1.00   4.3s|1.00   4.3s|0.85   5.1s|0.77   5.6s|0.31  13.6s|0.50   8.6s|0.45   9.5s|0.39  10.9s|0.63   6.8s|
+|  15 bytes |1.00   4.3s|1.00   4.3s|0.85   5.1s|0.77   5.6s|0.32  13.6s|0.50   8.6s|0.45   9.5s|0.39  10.9s|0.53   8.1s|
+|  16 bytes |1.00   4.3s|1.00   4.3s|0.84   5.1s|0.35  12.1s|0.53   8.1s|0.84   5.1s|0.82   5.2s|0.32  13.4s|0.78   5.5s|
+|  32 bytes |1.00   4.6s|0.95   4.8s|0.81   5.6s|0.37  12.4s|0.49   9.4s|0.89   5.1s|0.62   7.3s|0.24  18.9s|0.40  11.4s|
+|  48 bytes |1.00   4.8s|0.90   5.4s|0.65   7.5s|0.26  18.7s|0.52   9.4s|0.94   5.1s|0.62   7.8s|0.19  25.9s|0.34  14.3s|
+|  64 bytes |1.00   5.1s|0.85   6.0s|0.63   8.1s|0.28  18.6s|0.55   9.3s|1.00   5.1s|0.82   6.2s|0.16  31.6s|0.42  12.1s|
+|  96 bytes |1.00   5.8s|0.78   7.4s|0.58   9.9s|0.23  25.2s|0.42  13.9s|1.11   5.2s|0.76   7.6s|0.14  42.7s|0.45  13.0s|
+| 128 bytes |1.00   6.3s|0.72   8.7s|0.56  11.1s|0.20  31.5s|0.45  13.9s|1.19   5.3s|0.72   8.7s|0.12  53.8s|0.45  13.8s|
+| 192 bytes |1.00   7.8s|0.75  10.4s|0.54  14.4s|0.27  29.5s|0.47  16.5s|0.84   9.2s|0.70  11.2s|0.10  76.0s|0.51  15.4s|
+| 256 bytes |1.00   8.9s|0.71  12.6s|0.51  17.5s|0.30  29.9s|0.47  19.0s|0.57  15.6s|0.65  13.8s|0.09  97.4s|0.53  16.9s|
+| 512 bytes |1.00  14.8s|0.76  19.5s|0.49  30.0s|0.33  45.5s|0.43  34.7s|0.89  16.6s|0.54  27.5s|0.08 185.6s|0.50  29.8s|
+|1024 bytes |1.00  19.0s|0.51  37.1s|0.35  54.1s|0.26  71.9s|0.31  61.6s|0.73  26.1s|0.38  50.3s|0.05 362.2s|0.32  59.3s|
+| Bulk      |1.00   2.9s|0.56   5.2s|0.42   6.9s|0.37   7.8s|0.40   7.3s|0.77   3.8s|0.46   6.3s|0.06  46.0s|0.41   7.1s|
+| Average   |1.00       |0.90       |0.73       |0.53       |0.44       |0.75       |0.58       |0.29       |0.60       |
+| Geomean   |1.00       |0.89       |0.71       |0.48       |0.43       |0.73       |0.56       |0.24       |0.58       |
 
-# AARCH64 (APM X-Gene)
+* Apple M4:
 
-|           |  Spooky  | City64   | xxHash64|SipHash24| Metro64  |  MUM-V1  |  MUM-V2  |  MUM-V3  | 
-:-----------|---------:|---------:|--------:|--------:|---------:|---------:|---------:|---------:|
-5 bytes     |  18.13s  |  25.60s  | 22.40s  |   27.73s|  18.67s  |  20.79s  |**16.00s**|  17.07s  |
-8 bytes     |  17.60s  |  25.60s  | 21.33s  |   35.73s|  13.33s  |  14.39s  |  11.20s  | **9.06s**|
-16 bytes    |  30.93s  |  25.07s  | 26.13s  |   45.33s|  17.07s  |  21.33s  |**15.99s**|  19.73s  |
-32 bytes    |  30.94s  |  29.33s  | 36.27s  |   62.94s|  36.27s  |  28.26s  |**24.00s**|  28.27s  |
-64 bytes    |  44.80s  |**30.40s**| 40.54s  |  101.87s|  38.40s  |  41.60s  |  37.34s  |  41.07s  |
-128 bytes   |  73.07s  |  45.34s  | 49.07s  |  195.75s|**43.74s**|  69.34s  |  64.54s  |  67.74s  |
-16MB        |  40.01s  |  45.82s  | 53.24s  |  188.42s|  53.25s  |  48.48s  |  48.48s  |**33.90s**|
+| Length    |   VMUM    |  MUM-V3   |  MUM-V2   |  Spooky   |   City    |  xxHash3  |   t1ha2   | SipHash24 |   Metro   |
+|-----------|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|
+|   3 bytes |1.00   5.0s|1.00   5.0s|0.86   5.9s|0.67   7.5s|0.51   9.9s|0.85   5.9s|1.05   4.8s|0.50  10.0s|0.62   8.2s|
+|   4 bytes |1.00   4.7s|1.07   4.4s|0.87   5.3s|0.69   6.8s|0.48   9.6s|0.70   6.7s|0.98   4.8s|0.52   9.0s|0.73   6.4s|
+|   5 bytes |1.00   5.0s|1.01   5.0s|0.83   6.1s|0.71   7.1s|0.52   9.6s|0.74   6.8s|1.06   4.8s|0.49  10.4s|0.62   8.2s|
+|   6 bytes |1.00   5.0s|1.02   5.0s|0.86   5.8s|0.67   7.5s|0.52   9.6s|0.74   6.8s|1.06   4.8s|0.48  10.5s|0.62   8.2s|
+|   7 bytes |1.00   5.4s|1.01   5.3s|0.86   6.2s|0.69   7.8s|0.56   9.6s|0.79   6.8s|1.13   4.8s|0.50  10.8s|0.63   8.5s|
+|   8 bytes |1.00   3.1s|1.14   2.7s|0.83   3.7s|0.47   6.5s|0.32   9.6s|0.46   6.7s|0.68   4.5s|0.26  11.7s|0.66   4.7s|
+|   9 bytes |1.00   3.0s|0.98   3.1s|0.77   4.0s|0.47   6.5s|0.25  12.0s|0.52   5.9s|0.51   6.0s|0.26  11.7s|0.47   6.4s|
+|  10 bytes |1.00   3.0s|1.00   3.0s|0.76   4.0s|0.47   6.5s|0.26  12.0s|0.52   5.9s|0.51   6.0s|0.26  11.7s|0.48   6.4s|
+|  11 bytes |1.00   3.1s|0.99   3.1s|0.78   4.0s|0.48   6.5s|0.26  12.0s|0.53   5.9s|0.52   6.0s|0.26  11.7s|0.39   7.9s|
+|  12 bytes |1.00   3.1s|1.00   3.0s|0.75   4.1s|0.47   6.5s|0.26  12.0s|0.52   5.9s|0.51   6.0s|0.26  11.7s|0.48   6.4s|
+|  13 bytes |1.00   3.1s|1.00   3.1s|0.78   4.0s|0.48   6.5s|0.26  12.0s|0.53   5.9s|0.52   6.0s|0.26  11.7s|0.39   7.9s|
+|  14 bytes |1.00   3.2s|1.04   3.1s|0.81   4.0s|0.50   6.5s|0.27  12.0s|0.55   5.9s|0.54   6.0s|0.27  11.7s|0.41   7.9s|
+|  15 bytes |1.00   3.1s|1.00   3.1s|0.78   4.0s|0.48   6.5s|0.26  12.0s|0.53   5.9s|0.52   6.0s|0.27  11.7s|0.33   9.3s|
+|  16 bytes |1.00   3.0s|0.97   3.2s|0.77   4.0s|0.22  14.1s|0.33   9.3s|0.79   3.9s|0.51   6.0s|0.21  14.6s|0.50   6.1s|
+|  32 bytes |1.00   3.5s|0.93   3.7s|0.76   4.6s|0.25  14.1s|0.33  10.5s|0.92   3.8s|0.38   9.0s|0.17  20.7s|0.28  12.6s|
+|  48 bytes |1.00   3.8s|0.85   4.4s|0.72   5.2s|0.18  21.4s|0.35  10.8s|0.99   3.8s|0.42   9.0s|0.14  27.9s|0.24  15.5s|
+|  64 bytes |1.00   4.2s|0.82   5.1s|0.71   5.9s|0.20  21.4s|0.39  10.8s|1.10   3.8s|0.59   7.1s|0.12  34.1s|0.31  13.4s|
+|  96 bytes |1.00   4.9s|0.77   6.3s|0.68   7.2s|0.17  28.7s|0.30  16.2s|1.28   3.8s|0.57   8.6s|0.10  46.7s|0.34  14.3s|
+| 128 bytes |1.00   6.3s|0.83   7.6s|0.74   8.4s|0.17  36.0s|0.39  16.2s|1.65   3.8s|0.65   9.6s|0.10  61.4s|0.41  15.2s|
+| 192 bytes |1.00   7.8s|0.77  10.1s|0.64  12.2s|0.24  31.9s|0.42  18.6s|0.84   9.3s|0.62  12.5s|0.09  85.4s|0.46  17.0s|
+| 256 bytes |1.00   7.3s|0.58  12.6s|0.49  14.7s|0.22  32.4s|0.34  21.3s|0.54  13.6s|0.47  15.3s|0.07 110.2s|0.39  18.8s|
+| 512 bytes |1.00  13.9s|0.85  16.3s|0.75  18.6s|0.27  51.8s|0.36  38.3s|0.84  16.5s|0.45  31.1s|0.07 212.1s|0.42  32.8s|
+|1024 bytes |1.00  18.0s|0.66  27.2s|0.53  34.0s|0.22  81.0s|0.28  64.4s|0.73  24.6s|0.32  55.8s|0.04 412.4s|0.35  52.1s|
+| Bulk      |1.00   2.5s|0.80   3.1s|0.60   4.1s|0.31   8.0s|0.36   6.8s|0.86   2.9s|0.38   6.4s|0.05  52.2s|0.48   5.2s|
+| Average   |1.00       |0.92       |0.75       |0.40       |0.36       |0.77       |0.62       |0.24       |0.46       |
+| Geomean   |1.00       |0.91       |0.74       |0.36       |0.35       |0.73       |0.58       |0.19       |0.44       |
 
-# Vectorization
-* A major loop in function `_mum_hash_aligned` can be vectorized
-  using vector multiplication, addition, xor, and shuffle instructions
-* Modern x86-64 CPUs currently does not have vector
-  multiplication `64 x 64-bit -> 128-bit` (`pclmulqdq` only 1 `64x64->128-bit` multiplication)
-* AVX2 CPUs only have vector multiplication `32 x 32-bit -> 64-bit`
-  * One such vector instruction makes 4 multiplications which is
-    roughly equivalent what two `MULQ/MULX` insns does
-  * On very long keys, usage of such insn permits to achieve speed of Meow hash which is based on usage of AES insns
-* If Intel introduces a new vector insn for `64 x 64-bit -> 128-bit`
-  multiplication, potentially it could increase MUM speed up to 2
-  times (may be less as major memory speed access becomes a major bottleneck of the overall hash speed)
-* I decided not to use the vector insns because it makes mum-hash
-  implementation complicated and less portable
-* I believe major application of non-cryptographic hash functions are
-  hashing for hash tables and speed of hashing of short keys is the
-  most important requirement for such application
+* IBM Power10:
+
 
 # Using cryptographic vs. non-cryptographic hash function
   * People worrying about denial attacks based on generating hash
@@ -194,15 +245,17 @@
     * *sha1* is about 20-30 slower than MUM and City on the bulk speed tests
     * The new fastest cryptographic hash function *SipHash* is up to 10
       times slower
-  * MUM is also *resistant* to preimage attack (finding a string with given hash)
+  * MUM and VMUM are also *resistant* to preimage attack (finding a
+    key with given hash) 
     * To make hard moving to previous state values we use mostly 1-to-1 one way
       function `lo(x*C) + hi(x*C)` where C is a constant.  Brute force
       solution of equation `f(x) = a` probably requires `2^63` tries.
       Another used function equation `x ^ y = a` has a `2^64`
       solutions.  It complicates finding the overal solution further
   * If somebody is not convinced, you can use **randomly chosen
-    multiplication constants** (see function `mum_hash_randomize`).
-    Finding a string with a given hash even if you know a string with such
+    multiplication constants** (see functions `mum_hash_randomize` and
+    `vmum_hash_randomize`).
+    Finding a key with a given hash even if you know a key with such
     hash probably will be close to finding two or more solutions of
     *Diophantine* equations
   * If somebody is still not convinced, you can implement hash tables
@@ -217,30 +270,25 @@
     cryptographic hash function if a flaw is found in the old one, e.g. switching from
     SipHash to SHA2
   
-# How to use MUM
-* Please just include file `mum.h` into your C/C++ program and use the following functions:
-  * optional `mum_hash_randomize` for choosing multiplication constants randomly
-  * `mum_hash_init`, `mum_hash_step`, and `mum_hash_finish` for hashing complex data structures
-  * `mum_hash64` for hashing a 64-bit data
-  * `mum_hash` for hashing any continuous block of data
-* To compare MUM speed with Spooky, City64, and SipHash24 on your machine go to
-  the directory `src` and run a script
-
-```
-sh bench
-```
-
+# How to use [V]MUM
+* Please just include file `[v]mum.h` into your C/C++ program and use the following functions:
+  * optional `[v]mum_hash_randomize` for choosing multiplication constants randomly
+  * `[v]mum_hash_init`, `[v]mum_hash_step`, and `[v]mum_hash_finish` for hashing complex data structures
+  * `[v]mum_hash64` for hashing a 64-bit data
+  * `[v]mum_hash` for hashing any continuous block of data
+* To compare MUM and VMUM speed with other hash functions on your machine go to
+  the directory `src` and run a script `./bench.sh`
 * The script will compile source files and run the tests printing the
-  results
+  results as a markdown table
 
 # Crypto-hash function MUM512
-  * MUM is not designed to be a crypto-hash
+  * [V]MUM is not designed to be a crypto-hash
     * The key (seed) and state are only 64-bit which are not crypto-level ones
     * The result can be different for different targets (BE/LE
       machines, 32- and 64-bit machines) as for other hash functions, e.g. City (hash can be
       different on SSE4.2 nad non SSE4.2 targets) or Spooky (BE/LE machines)
       * If you need the same MUM hash independent on the target, please
-        define macro `MUM_TARGET_INDEPENDENT_HASH`
+        define macro `[V]MUM_TARGET_INDEPENDENT_HASH`
   * There is a variant of MUM called MUM512 which can be a **candidate**
     for a crypto-hash function and keyed crypto-hash function and
     might be interesting for researchers
@@ -266,18 +314,18 @@ sh bench
       systems with varying multiplication instruction latency time.
       There is no code for now to prevent it
   * To compare the MUM512 speed with the speed of SHA-2 (SHA512) and
-    SHA-3 (SHA3-512) go to the directory `src` and run a script `sh bench-crypto`
+    SHA-3 (SHA3-512) go to the directory `src` and run a script `./bench-crypto.sh`
     * SHA-2 and SHA-3 code is taken from [RHash](https://github.com/rhash/RHash.git)
   * Blake2 crypto-hash from [github.com/BLAKE2/BLAKE2](https://github.com/BLAKE2/BLAKE2)
     was added for comparison.  I use sse version of 64-bit Blake2 (blake2b).
-  * Here is the speed of the crypto hash functions on 4.7 GHz Intel i7-8700K:
+  * Here is the speed of the crypto hash functions on AMD 9900X:
 
 |                        | MUM512 | SHA2  |  SHA3  | Blake2B|
 :------------------------|-------:|------:|-------:|-------:|
-10 bytes (20 M texts)    | 0.57s  | 0.53s |  0.87s |  0.68s |
-100 bytes (20 M texts)   | 0.77s  | 0.51s |  1.68s |  0.68s |
-1000 bytes (20 M texts)  | 2.75s  | 3.79s | 11.58s |  2.85s |
-10000 bytes (5 M texts)  | 5.60s  | 9.21s | 28.37s |  6.23s |
+10 bytes (20 M texts)    | 0.27s  | 0.27s |  0.44s |  0.81s |
+100 bytes (20 M texts)   | 0.36s  | 0.25s |  0.84s |  0.84s |
+1000 bytes (20 M texts)  | 1.21s  | 2.08s | 5.63s  |  3.70s |
+10000 bytes (5 M texts)  | 5.60s  | 5.05s | 14.07s |  7.99s |
 
 # Pseudo-random generators
   * Files `mum-prng.h` and `mum512-prng.h` provides pseudo-random
@@ -288,7 +336,7 @@ sh bench
     * Although MUM PRNG pass the test, it is not a cryptographically
       secure PRNG as the hash function used for it
   * To compare the PRNG speeds go to
-    the directory `src` and run a script `sh bench-prng`
+    the directory `src` and run a script `./bench-prng.sh`
   * For the comparison I wrote crypto-secured Blum Blum Shub PRNG
     (file `bbs-prng.h`) and PRNGs based on fast cryto-level hash
     functions in ChaCha stream cipher (file `chacha-prng.h`) and
@@ -315,30 +363,28 @@ sh bench
       * both code without inlining will be visibly slower and the speed
         difference will be negligible as one PRN calculation takes
         only about **3-4 machine cycle** for xoroshiro/xoshiro and MUM PRN.
-  * **Update Nov. 2**: I found that MUM PRNG fails practrand on 512GB.  So I modified it.
+  * **Update Nov.2 2019**: I found that MUM PRNG fails practrand on 512GB.  So I modified it.
     Instead of basically 16 independent PRNGs with 64-bit state, I made it one PRNG with 1024-bit state.
     I also managed to speed up MUM PRNG by 15%.
-      * There was a typo in `XOSHIRO512**` performance result (it was 1944 M prns/sec).  So I fixed it.
-        It is actually 1044.
   * All PRNG were tested by [practrand](http://pracrand.sourceforge.net/) with
     4TB PRNG generated stream (it took a few days)
       * **GLIBC RAND, xoroshiro128+, xoshiro256+, and xoshiro512+ failed** on the first stages of practrand
       * the rest PRNGs passed
       * BBS PRNG was tested by only 64GB stream because it is too slow
   * Here is the speed of the PRNGs in millions generated PRNs
-    per second on 4.7 GHz Intel i7-8700K:
+    per second:
 
-|                        | M prns/sec  |
-:------------------------|------------:|
-BBS                      | 0.078       |
-ChaCha                   | 199         |
-SipHash24                | 413         |
-MUM512                   |  83         |
-MUM                      |1317         |
-XOSHIRO128**             |1130         |
-XOSHIRO256**             |1337         |
-XOSHIRO512**             |1044         |
-GLIBC RAND               | 193         |
-XOROSHIRO128+            |1342         |
-XOSHIRO256+              |1339         |
-XOSHIRO512+              |1253         |
+|  M prns/sec  | AMD 9900X   |Intel i5-1360K| Apple M4    | Power10  |
+:--------------|------------:|-------------:|------------:|---------:|
+BBS            | 0.0886      | 0.0827       | 0.122       | 0.021    |
+ChaCha         | 357.68      | 184.80       | 262.81      |  83.20   |
+SipHash24      | 702.10      | 567.43       | 760.13      | 231.48   |
+MUM512         |  91.54      | 179.62       | 268.04      |  44.28   |
+MUM            |1947.27      |1620.65       |2263.68      | 694.42   |
+XOSHIRO128**   |1797.02      |1386.87       |1095.37      | 477.67   |
+XOSHIRO256**   |1866.35      |1364.85       |1466.15      | 607.65   |
+XOSHIRO512**   |1663.86      |1235.15       |1423.90      | 631.90   |
+GLIBC RAND     | 115.57      | 101.48       | 228.99      |  33.66   |
+XOROSHIRO128+  |1786.62      |1299.59       |1296.48      | 549.85   |
+XOSHIRO256+    |2321.99      |1720.67       |1690.96      | 711.41   |
+XOSHIRO512+    |1808.81      |1525.18       |1659.76      | 717.12   |
