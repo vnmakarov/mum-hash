@@ -75,7 +75,7 @@ check_meow=`(test $mach == x86_64 || test $mach == aarch64) && echo yes`
 check_meow=
 check_xxHash=
 
-echo -n '| Length   |  MUM-V4   |  MUM-V3   |  MUM-V2   |  Spooky   |   City    |'
+echo -n '| Length   |   VMUM    |  MUM-V3   |  MUM-V2   |  Spooky   |   City    |'
 if test "$check_xxHash" == yes; then echo -n '  xxHash   |';fi
 echo -n '  xxHash3  |   t1ha2   | SipHash24 |   Metro   |'
 if test "$check_meow" == yes; then echo ' MeowHash  |'; else echo; fi
@@ -84,9 +84,9 @@ if test "$check_xxHash" == yes; then echo -n ':---------:|';fi
 echo -n ':---------:|:---------:|:---------:|:---------:|'
 if test "$check_meow" == yes; then echo ':---------:|'; else echo; fi
 
-for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 64 128 256 0;do
+for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 48 64 96 128 192 256 512 1024 0;do # 
     if test $i == 0; then echo -n '| Bulk     |'; else printf '|%3d bytes |' $i;fi
-    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && run "00MUM-V4" "./a.out" first
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DVMUM -I../ bench.c && run "00vMUM" "./a.out" first
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V3 -I../ bench.c && run "01MUM-V3" "./a.out"
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V2 -I../ bench.c && run "02MUM-V2" "./a.out"
     if test x${MUM_ONLY} == x; then

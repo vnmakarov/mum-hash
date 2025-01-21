@@ -127,6 +127,20 @@ static void mum_test64 (const void *key, int len, uint32_t seed, void *out) {
 #define test mum_test
 #define test64 mum_test64
 
+#elif defined(VMUM)
+
+#include "vmum.h"
+static void mum_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = mum_hash (key, len, seed);
+}
+
+static void mum_test64 (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = mum_hash64 (*(uint64_t *) key, seed);
+}
+
+#define test mum_test
+#define test64 mum_test64
+
 #else
 #error "I don't know what to test"
 #endif
@@ -161,11 +175,12 @@ int main () {
   int i, j, n;
   uint64_t out;
 
-  assert (len <= 256);
+  assert (len <= 1024);
+  printf ("%d-byte: %s:\n", len, (size_t) k & 0x7 ? "unaligned" : "aligned");
   for (i = 0; i < sizeof (k) / sizeof (uint64_t); i++) k[i] = i;
   for (j = 0; j < 128; j++)
     for (n = i = 0; i < 10000000; i++) test (k, len, 2, &out), k[0] = out;
-  printf ("%d-byte: %s:%llx\n", len, (size_t) k & 0x7 ? "unaligned" : "aligned", out);
+  printf ("%llx\n", out);
   return 0;
 }
 
