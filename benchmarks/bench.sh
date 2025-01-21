@@ -75,19 +75,19 @@ check_meow=`(test $mach == x86_64 || test $mach == aarch64) && echo yes`
 check_meow=
 check_xxHash=
 
-echo -n '| Length   |   VMUM    |  MUM-V3   |  MUM-V2   |  Spooky   |   City    |'
+echo -n '| Length    |   VMUM    |  MUM-V3   |  MUM-V2   |  Spooky   |   City    |'
 if test "$check_xxHash" == yes; then echo -n '  xxHash   |';fi
 echo -n '  xxHash3  |   t1ha2   | SipHash24 |   Metro   |'
 if test "$check_meow" == yes; then echo ' MeowHash  |'; else echo; fi
-echo -n ':----------|:---------:|:---------:|:---------:|:---------:|:---------:|'
+echo -n '|:----------|:---------:|:---------:|:---------:|:---------:|:---------:|'
 if test "$check_xxHash" == yes; then echo -n ':---------:|';fi
 echo -n ':---------:|:---------:|:---------:|:---------:|'
 if test "$check_meow" == yes; then echo ':---------:|'; else echo; fi
 
 for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 48 64 96 128 192 256 512 1024 0;do # 
-    if test $i == 0; then echo -n '| Bulk     |'; else printf '|%3d bytes |' $i;fi
+    if test $i == 0; then echo -n '| Bulk      |'; else printf '|%4d bytes |' $i;fi
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DVMUM -I../ bench.c && run "00vMUM" "./a.out" first
-    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V3 -I../ bench.c && run "01MUM-V3" "./a.out"
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && run "01MUM-V3" "./a.out"
     ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V2 -I../ bench.c && run "02MUM-V2" "./a.out"
     if test x${MUM_ONLY} == x; then
 	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky SpookyV2.o bench.c && run "03Spooky" "./a.out"
@@ -108,13 +108,13 @@ for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 48 64 96 128 192 256 512 1024 0;d
     echo
 done
 
-echo -n '| Average  |'
+echo -n '| Average   |'
 for i in `awk -F: '{print $1}' $temp3|sort|uniq`; do
     printf '%-10.2f |' `awk -F: -v name="$i" 'name==$1 {f = f + $2; n++} END {printf "%0.2f\n", f / n}' $temp3`
 done
 echo
 
-echo -n '| Geomean  |'
+echo -n '| Geomean   |'
 for i in `awk -F: '{print $1}' $temp3|sort|uniq`; do
     printf '%-10.2f |' `awk -F: -v name="$i" 'BEGIN{f=1.0} name==$1 {f = f * $2; n++} END {printf "%0.2f\n", exp (log(f)/n)}' $temp3`
 done

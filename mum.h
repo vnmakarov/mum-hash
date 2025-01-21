@@ -200,7 +200,7 @@ static _MUM_INLINE uint64_t _mum_le16 (uint16_t v) {
 /* Rotate V left by SH. */
 static _MUM_INLINE uint64_t _mum_rotl (uint64_t v, int sh) { return v << sh | v >> (64 - sh); }
 
-#if defined(MUM_V1) || defined(MUM_V2) || defined(MUM_V3)
+#if defined(MUM_V1) || defined(MUM_V2) || !defined(MUM_QUALITY)
 #define _MUM_TAIL_START(v) 0
 #else
 #define _MUM_TAIL_START(v) v
@@ -234,7 +234,7 @@ static _MUM_INLINE uint64_t _MUM_OPTIMIZE ("unroll-loops")
     result = _mum (result, _mum_unroll_prime);
   }
   n = len / sizeof (uint64_t);
-#if defined(MUM_V1) || defined(MUM_V2) || defined(MUM_V3)
+#if defined(MUM_V1) || defined(MUM_V2) || !defined(MUM_QUALITY)
   for (i = 0; i < n; i++) result ^= _mum (_mum_le (((uint64_t *) str)[i]), _mum_primes[i]);
 #else
   for (i = 0; i < n; i++)
