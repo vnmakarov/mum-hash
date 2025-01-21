@@ -313,7 +313,6 @@ static _MUM_INLINE uint64_t _MUM_OPTIMIZE ("unroll-loops")
   size_t n;
 
   result = _mum (result, _mum_block_start_prime);
-  i = 0;
   if (len >= _MUM_UNROLL_BLOCK_FACTOR * sizeof (_mum_block_t)) {
     _mum_block_t state;
     _mum_zero_block (&state);
