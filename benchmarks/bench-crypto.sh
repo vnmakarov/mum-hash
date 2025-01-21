@@ -7,7 +7,7 @@ temp=__temp
 
 
 print() {
-    s=`egrep 'user[ 	]*[0-9]' $2 | sed s/.*user// | sed s/\\t//`
+    s=`grep -E 'user[ 	]*[0-9]' $2 | sed s/.*user// | sed s/\\t//`
     echo $1 "$s"s
 }
 
@@ -16,7 +16,7 @@ gcc -O3 -w -c sha512.c byte_order.c || exit 1
 echo compiling sha3
 gcc -O3 -w -c sha3.c || exit 1
 
-str86_64="`uname -a|fgrep x86_64`"
+str86_64="`uname -a|grep x86_64`"
 if test -n str86_64; then
     echo compiling blake2b
     gcc -O3 -w -c -I. -std=gnu99 blake2b.c || exit 1
