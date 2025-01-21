@@ -200,6 +200,11 @@ static _MUM_INLINE uint64_t _mum_le16 (uint16_t v) {
 /* Rotate V left by SH. */
 static _MUM_INLINE uint64_t _mum_rotl (uint64_t v, int sh) { return v << sh | v >> (64 - sh); }
 
+#if defined(MUM_V1) || defined(MUM_V2) || defined(MUM_V3)
+#define _MUM_TAIL_START(v) 0
+#else
+#define _MUM_TAIL_START(v) v
+#endif
 static _MUM_INLINE uint64_t _MUM_OPTIMIZE ("unroll-loops")
   _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   uint64_t result = start;
@@ -239,42 +244,30 @@ static _MUM_INLINE uint64_t _MUM_OPTIMIZE ("unroll-loops")
   str += n * sizeof (uint64_t);
   switch (len) {
   case 7:
-    u64 = _mum_le32 (*(uint32_t *) str);
-    u64 |= _mum_le16 (*(uint16_t *) (str + 4)) << 32;
-    u64 |= (uint64_t) str[6] << 48;
-#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
-    u64 += _mum_primes[0];
-#endif
+    u64 = _MUM_TAIL_START (_mum_primes[0]) + _mum_le32 (*(uint32_t *) str);
+    u64 += _mum_le16 (*(uint16_t *) (str + 4)) << 32;
+    u64 += (uint64_t) str[6] << 48;
     return result ^ _mum (u64, _mum_tail_prime);
-  case 6: u64 = _mum_le32 (*(uint32_t *) str); u64 |= _mum_le16 (*(uint16_t *) (str + 4)) << 32;
-#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
-    u64 += _mum_primes[1];
-#endif
+  case 6:
+    u64 = _MUM_TAIL_START (_mum_primes[1]) + _mum_le32 (*(uint32_t *) str);
+    u64 += _mum_le16 (*(uint16_t *) (str + 4)) << 32;
     return result ^ _mum (u64, _mum_tail_prime);
-  case 5: u64 = _mum_le32 (*(uint32_t *) str); u64 |= (uint64_t) str[4] << 32;
-#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
-    u64 += _mum_primes[2];
-#endif
+  case 5:
+    u64 = _MUM_TAIL_START (_mum_primes[2]) + _mum_le32 (*(uint32_t *) str);
+    u64 += (uint64_t) str[4] << 32;
     return result ^ _mum (u64, _mum_tail_prime);
-  case 4: u64 = _mum_le32 (*(uint32_t *) str);
-#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
-    u64 += _mum_primes[3];
-#endif
+  case 4:
+    u64 = _MUM_TAIL_START (_mum_primes[3]) + _mum_le32 (*(uint32_t *) str);
     return result ^ _mum (u64, _mum_tail_prime);
-  case 3: u64 = _mum_le16 (*(uint16_t *) str); u64 |= (uint64_t) str[2] << 16;
-#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
-    u64 += _mum_primes[4];
-#endif
+  case 3:
+    u64 = _MUM_TAIL_START (_mum_primes[4]) + _mum_le16 (*(uint16_t *) str);
+    u64 += (uint64_t) str[2] << 16;
     return result ^ _mum (u64, _mum_tail_prime);
-  case 2: u64 = _mum_le16 (*(uint16_t *) str);
-#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
-    u64 += _mum_primes[5];
-#endif
+  case 2:
+    u64 = _MUM_TAIL_START (_mum_primes[5]) + _mum_le16 (*(uint16_t *) str);
     return result ^ _mum (u64, _mum_tail_prime);
-  case 1: u64 = str[0];
-#if !defined(MUM_V1) && !defined(MUM_V2) && !defined(MUM_V3)
-    u64 += _mum_primes[6];
-#endif
+  case 1:
+    u64 = _MUM_TAIL_START (_mum_primes[6]) + str[0];
     return result ^ _mum (u64, _mum_tail_prime);
   }
   return result;
@@ -330,7 +323,7 @@ _MUM_TARGET ("inline-all-stringops")
   else {
     while (len != 0) {
       block_len = len < _MUM_BLOCK_LEN ? len : _MUM_BLOCK_LEN;
-      memmove (buf, str, block_len);
+      memcpy (buf, str, block_len);
       result = _mum_hash_aligned (result, buf, block_len);
       len -= block_len;
       str += block_len;
