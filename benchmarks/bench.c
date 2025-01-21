@@ -131,11 +131,11 @@ static void mum_test64 (const void *key, int len, uint32_t seed, void *out) {
 
 #include "vmum.h"
 static void mum_test (const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t *) out = mum_hash (key, len, seed);
+  *(uint64_t *) out = vmum_hash (key, len, seed);
 }
 
 static void mum_test64 (const void *key, int len, uint32_t seed, void *out) {
-  *(uint64_t *) out = mum_hash64 (*(uint64_t *) key, seed);
+  *(uint64_t *) out = vmum_hash64 (*(uint64_t *) key, seed);
 }
 
 #define test mum_test
