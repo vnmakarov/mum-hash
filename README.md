@@ -33,7 +33,8 @@
   * To make MUM V3 to pass the Rurban SMHasher, macro `MUM_QUALITY` has been
     added.  Compilation with this defined macro makes MUM V3 to pass
     all tests of Rurban SMHasher.  The slowdown is about 5% in average
-    or 10% at most on keys of length 8.
+    or 10% at most on keys of length 8.  It also results in generating
+    a target independent hash
 * For historic reasons mum.h contains code for older version V1 and
   V2.  You can switch them on by defining macros **MUM_V1** and **MUM_V2**
 * MUM algorithm is **simpler** than the VMUM one
@@ -159,8 +160,8 @@
   
 | Hash            | AES  | Bulk Speed (256KB): GB/s |Av. Speed on keys (1-32 bytes): cycles/hash| SLOC|
 |:----------------|:----:|-------------------------:|------------------------------------------:|----:|
-|VMUM             |  -   |  143.5                   | 16.8                                      |413  |
-|MUM              |  -   |   39.5                   | 16.1                                      |282  |
+|VMUM             |  -   |  143.5                   | 16.8                                      |412  |
+|MUM              |  -   |   39.5                   | 16.1                                      |285  |
 |xxh3             |  -   |   66.6                   | 17.6                                      |965  |
 |umash64          |  -   |   63.1                   | 25.4                                      |1097 |
 |FarmHash32       |  -   |   39.8                   | 32.6                                      |1423 |

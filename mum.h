@@ -63,6 +63,10 @@ typedef unsigned __int64 uint64_t;
 #define _MUM_INLINE inline
 #endif
 
+#if defined(MUM_QUALITY) && !defined(MUM_TARGET_INDEPENDENT_HASH)
+#define MUM_TARGET_INDEPENDENT_HASH
+#endif
+
 /* Macro saying to use 128-bit integers implemented by GCC for some targets. */
 #ifndef _MUM_USE_INT128
 /* In GCC uint128_t is defined if HOST_BITS_PER_WIDE_INT >= 64. HOST_WIDE_INT is long if
