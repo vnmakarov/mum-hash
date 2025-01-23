@@ -16,6 +16,8 @@ LTO=${LTO:--flto}
 CC=${CC:-cc}
 CXX=${CXX:-c++}
 
+echo Using ${CC} and ${CXX}
+
 if test x${MUM_ONLY} == x; then
     echo compiling Spooky
     ${CXX} ${COPTFLAGS} ${LTO} -w -c SpookyV2.cpp || exit 1
