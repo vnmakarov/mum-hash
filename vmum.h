@@ -38,6 +38,12 @@
 #include <string.h>
 #include <limits.h>
 
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L
+#include <assert.h>
+#else
+#define static_assert(a)
+#endif
+
 #ifdef _MSC_VER
 typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;

@@ -159,7 +159,7 @@
   
 | Hash            | AES  | Bulk Speed (256KB): GB/s |Av. Speed on keys (1-32 bytes): cycles/hash| SLOC|
 |:----------------|:----:|-------------------------:|------------------------------------------:|----:|
-|VMUM             |  -   |  143.5                   | 16.8                                      |408  |
+|VMUM             |  -   |  143.5                   | 16.8                                      |413  |
 |MUM              |  -   |   39.5                   | 16.1                                      |282  |
 |xxh3             |  -   |   66.6                   | 17.6                                      |965  |
 |umash64          |  -   |   63.1                   | 25.4                                      |1097 |
@@ -222,7 +222,9 @@
       machines, 32- and 64-bit machines) as for other hash functions, e.g. City (hash can be
       different on SSE4.2 nad non SSE4.2 targets) or Spooky (BE/LE machines)
       * If you need the same MUM hash independent on the target, please
-        define macro `[V]MUM_TARGET_INDEPENDENT_HASH`
+        define macro `[V]MUM_TARGET_INDEPENDENT_HASH`.  Defining the
+        macro affects the performace only on big-endian targets or
+        targets without int128 support
   * There is a variant of MUM called MUM512 which can be a **candidate**
     for a crypto-hash function and keyed crypto-hash function and
     might be interesting for researchers
