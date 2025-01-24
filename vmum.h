@@ -309,27 +309,27 @@ static _VMUM_INLINE uint64_t _vmum_fold_block (_vmum_block_t *b) {
 
 static _VMUM_INLINE uint64_t _VMUM_OPTIMIZE ("unroll-loops")
   _vmum_hash_aligned (uint64_t start, const void *key, size_t len) {
-  uint64_t result = start;
+  uint64_t state = start;
   const unsigned char *str = (const unsigned char *) key;
   uint64_t u64, w;
   size_t i, j;
   size_t n;
 
-  result = _vmum (result, _vmum_block_start_factor);
+  state = _vmum (state, _vmum_block_start_factor);
   if (len >= _VMUM_UNROLL_BLOCK_FACTOR * sizeof (_vmum_block_t)) {
-    _vmum_block_t state;
-    _vmum_zero_block (&state);
+    _vmum_block_t block_state;
+    _vmum_zero_block (&block_state);
     do {
       static_assert (_VMUM_UNROLL_BLOCK_FACTOR <= sizeof (_vmum_factors) / sizeof (uint64_t));
       for (i = 0; i < _VMUM_UNROLL_BLOCK_FACTOR; i += 2)
-        _vmum_update_block (&state, &((_vmum_block_t *) str)[i],
+        _vmum_update_block (&block_state, &((_vmum_block_t *) str)[i],
                             &((_vmum_block_t *) _vmum_factors)[i]);
       len -= _VMUM_UNROLL_BLOCK_FACTOR * sizeof (_vmum_block_t);
       str += _VMUM_UNROLL_BLOCK_FACTOR * sizeof (_vmum_block_t);
       /* We will use the same factor numbers on the next iterations -- randomize the state. */
-      _vmum_factor_block (&state, (_vmum_block_t *) _vmum_unroll_factors);
+      _vmum_factor_block (&block_state, (_vmum_block_t *) _vmum_unroll_factors);
     } while (len >= _VMUM_UNROLL_BLOCK_FACTOR * sizeof (_vmum_block_t));
-    result += _vmum_fold_block (&state);
+    state += _vmum_fold_block (&block_state);
   }
   /* Here we have enough factors to do hashing w/o state randominzation: */
   static_assert (_VMUM_UNROLL_BLOCK_FACTOR * sizeof (_vmum_block_t) / sizeof (uint64_t) + 7
@@ -337,14 +337,14 @@ static _VMUM_INLINE uint64_t _VMUM_OPTIMIZE ("unroll-loops")
   i = 0;
   while (len >= _VMUM_UNROLL_FACTOR * sizeof (uint64_t)) {
     for (j = 0; j < _VMUM_UNROLL_FACTOR; j += 2, i += 2)
-      result ^= _vmum (_vmum_le (((uint64_t *) str)[i]) ^ _vmum_factors[i],
-                       _vmum_le (((uint64_t *) str)[i + 1]) ^ _vmum_factors[i + 1]);
+      state ^= _vmum (_vmum_le (((uint64_t *) str)[i]) ^ _vmum_factors[i],
+                      _vmum_le (((uint64_t *) str)[i + 1]) ^ _vmum_factors[i + 1]);
     len -= _VMUM_UNROLL_FACTOR * sizeof (uint64_t);
   }
   n = len / sizeof (uint64_t) & ~(size_t) 1;
   for (j = 0; j < n; j += 2, i += 2)
-    result ^= _vmum (_vmum_le (((uint64_t *) str)[i]) + _vmum_factors[i],
-                     _vmum_le (((uint64_t *) str)[i + 1]) + _vmum_factors[i + 1]);
+    state ^= _vmum (_vmum_le (((uint64_t *) str)[i]) + _vmum_factors[i],
+                    _vmum_le (((uint64_t *) str)[i + 1]) + _vmum_factors[i + 1]);
   len -= n * sizeof (uint64_t);
   str += i * sizeof (uint64_t);
   switch (len) {
@@ -352,60 +352,60 @@ static _VMUM_INLINE uint64_t _VMUM_OPTIMIZE ("unroll-loops")
     w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
     u64 = _vmum_factors[i + 1] + _vmum_le32 (*(uint32_t *) (str + 8));
     u64 += (_vmum_le16 (*(uint16_t *) (str + 12)) << 32) + ((uint64_t) str[14] << 48);
-    return result ^ _vmum (u64 ^ _vmum_tail_factor, w);
+    return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 14:
     w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
     u64 = _vmum_factors[i + 2] + _vmum_le32 (*(uint32_t *) (str + 8));
     u64 += _vmum_le16 (*(uint16_t *) (str + 12)) << 32;
-    return result ^ _vmum (u64 ^ _vmum_tail_factor, w);
+    return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 13:
     w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
     u64 = _vmum_factors[i + 3] + _vmum_le32 (*(uint32_t *) (str + 8));
     u64 += (uint64_t) str[12] << 32;
-    return result ^ _vmum (u64 ^ _vmum_tail_factor, w);
+    return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 12:
     w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
     u64 = _vmum_factors[i + 4] + _vmum_le32 (*(uint32_t *) (str + 8));
-    return result ^ _vmum (u64 ^ _vmum_tail_factor, w);
+    return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 11:
     w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
     u64 = _vmum_factors[i + 5] + _vmum_le16 (*(uint16_t *) (str + 8));
     u64 += (uint64_t) str[10] << 16;
-    return result ^ _vmum (u64 ^ _vmum_tail_factor, w);
+    return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 10:
     w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
     u64 = _vmum_factors[i + 6] + _vmum_le16 (*(uint16_t *) (str + 8));
-    return result ^ _vmum (u64 ^ _vmum_tail_factor, w);
+    return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 9:
     w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
     u64 = _vmum_factors[i + 7] + str[8];
-    return result ^ _vmum (u64 ^ _vmum_tail_factor, w);
-  case 8: return result ^ _vmum (_vmum_le (*(uint64_t *) str) + _vmum_factors[i], _vmum_factors[i]);
+    return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
+  case 8: return state ^ _vmum (_vmum_le (*(uint64_t *) str) + _vmum_factors[i], _vmum_factors[i]);
   case 7:
     u64 = _vmum_factors[i + 1] + _vmum_le32 (*(uint32_t *) str);
     u64 += (_vmum_le16 (*(uint16_t *) (str + 4)) << 32) + ((uint64_t) str[6] << 48);
-    return result ^ _vmum (u64, _vmum_tail_factor);
+    return state ^ _vmum (u64, _vmum_tail_factor);
   case 6:
     u64 = _vmum_factors[i + 2] + _vmum_le32 (*(uint32_t *) str);
     u64 += _vmum_le16 (*(uint16_t *) (str + 4)) << 32;
-    return result ^ _vmum (u64, _vmum_tail_factor);
+    return state ^ _vmum (u64, _vmum_tail_factor);
   case 5:
     u64 = _vmum_factors[i + 3] + _vmum_le32 (*(uint32_t *) str);
     u64 += (uint64_t) str[4] << 32;
-    return result ^ _vmum (u64, _vmum_tail_factor);
+    return state ^ _vmum (u64, _vmum_tail_factor);
   case 4:
     u64 = _vmum_factors[i + 4] + _vmum_le32 (*(uint32_t *) str);
-    return result ^ _vmum (u64, _vmum_tail_factor);
+    return state ^ _vmum (u64, _vmum_tail_factor);
   case 3:
     u64 = _vmum_factors[i + 5] + _vmum_le16 (*(uint16_t *) str);
     u64 += (uint64_t) str[2] << 16;
-    return result ^ _vmum (u64, _vmum_tail_factor);
+    return state ^ _vmum (u64, _vmum_tail_factor);
   case 2:
     u64 = _vmum_factors[i + 6] + _vmum_le16 (*(uint16_t *) str);
-    return result ^ _vmum (u64, _vmum_tail_factor);
-  case 1: u64 = _vmum_factors[i + 7] + str[0]; return result ^ _vmum (u64, _vmum_tail_factor);
+    return state ^ _vmum (u64, _vmum_tail_factor);
+  case 1: u64 = _vmum_factors[i + 7] + str[0]; return state ^ _vmum (u64, _vmum_tail_factor);
   }
-  return result;
+  return state;
 }
 
 /* Final randomization of H. */
