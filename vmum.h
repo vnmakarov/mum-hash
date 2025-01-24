@@ -54,13 +54,9 @@ typedef unsigned __int64 uint64_t;
 
 #if defined(__GNUC__)
 #define _VMUM_ATTRIBUTE_UNUSED __attribute__ ((unused))
-#define _VMUM_OPTIMIZE(opts) __attribute__ ((__optimize__ (opts)))
-#define _VMUM_TARGET(opts) __attribute__ ((__target__ (opts)))
 #define _VMUM_INLINE inline __attribute__ ((always_inline))
 #else
 #define _VMUM_ATTRIBUTE_UNUSED
-#define _VMUM_OPTIMIZE(opts)
-#define _VMUM_TARGET(opts)
 #define _VMUM_INLINE inline
 #endif
 
@@ -307,7 +303,10 @@ static _VMUM_INLINE uint64_t _vmum_fold_block (_vmum_block_t *b) {
    unrolled by the compiler. */
 #define _VMUM_UNROLL_FACTOR 16
 
-static _VMUM_INLINE uint64_t _VMUM_OPTIMIZE ("unroll-loops")
+static _VMUM_INLINE uint64_t
+#if defined(__GNUC__) && !defined(__clang__)
+  __attribute__ ((__optimize__ ("unroll-loops")))
+#endif
   _vmum_hash_aligned (uint64_t start, const void *key, size_t len) {
   uint64_t state = start;
   const unsigned char *str = (const unsigned char *) key;
@@ -435,8 +434,8 @@ static _VMUM_INLINE uint64_t _vmum_final (uint64_t h) {
 #endif
 
 static _VMUM_INLINE uint64_t
-#if defined(__x86_64__)
-_VMUM_TARGET ("inline-all-stringops")
+#if defined(__x86_64__) && defined(__GNUC__) && !defined(__clang__)
+  __attribute__ ((__target__ ("inline-all-stringops")))
 #endif
   _vmum_hash_default (const void *key, size_t len, uint64_t seed) {
   uint64_t result;

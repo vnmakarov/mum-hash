@@ -53,13 +53,9 @@ typedef unsigned __int64 uint64_t;
 
 #ifdef __GNUC__
 #define _MUM_ATTRIBUTE_UNUSED __attribute__ ((unused))
-#define _MUM_OPTIMIZE(opts) __attribute__ ((__optimize__ (opts)))
-#define _MUM_TARGET(opts) __attribute__ ((__target__ (opts)))
 #define _MUM_INLINE inline __attribute__ ((always_inline))
 #else
 #define _MUM_ATTRIBUTE_UNUSED
-#define _MUM_OPTIMIZE(opts)
-#define _MUM_TARGET(opts)
 #define _MUM_INLINE inline
 #endif
 
@@ -209,7 +205,10 @@ static _MUM_INLINE uint64_t _mum_rotl (uint64_t v, int sh) { return v << sh | v 
 #else
 #define _MUM_TAIL_START(v) v
 #endif
-static _MUM_INLINE uint64_t _MUM_OPTIMIZE ("unroll-loops")
+static _MUM_INLINE uint64_t
+#if defined(__GNUC__) && !defined(__clang__)
+  __attribute__ ((__optimize__ ("unroll-loops")))
+#endif
   _mum_hash_aligned (uint64_t start, const void *key, size_t len) {
   uint64_t result = start;
   const unsigned char *str = (const unsigned char *) key;
@@ -312,8 +311,8 @@ static _MUM_INLINE uint64_t _mum_final (uint64_t h) {
 #endif
 
 static _MUM_INLINE uint64_t
-#if defined(__x86_64__)
-_MUM_TARGET ("inline-all-stringops")
+#if defined(__x86_64__) && defined(__GNUC__) && !defined(__clang__)
+  __attribute__ ((__target__ ("inline-all-stringops")))
 #endif
   _mum_hash_default (const void *key, size_t len, uint64_t seed) {
   uint64_t result;
