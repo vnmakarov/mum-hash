@@ -211,6 +211,8 @@
   * `[v]mum_hash_init`, `[v]mum_hash_step`, and `[v]mum_hash_finish` for hashing complex data structures
   * `[v]mum_hash64` for hashing a 64-bit data
   * `[v]mum_hash` for hashing any continuous block of data
+  * Compile `vmum.h` with other code using options switching on vector
+    insns if necessary (e.g. -mavx2 for x86\_64)
 * To compare MUM and VMUM speed with other hash functions on your machine go to
   the directory `src` and run a script `./bench.sh`
 * The script will compile source files and run the tests printing the
