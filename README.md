@@ -214,7 +214,7 @@
   * Compile `vmum.h` with other code using options switching on vector
     insns if necessary (e.g. -mavx2 for x86\_64)
 * To compare MUM and VMUM speed with other hash functions on your machine go to
-  the directory `src` and run a script `./bench.sh`
+  the directory `benchmarks` and run a script `./bench.sh`
 * The script will compile source files and run the tests printing the
   results as a markdown table
 
@@ -253,7 +253,7 @@
       systems with varying multiplication instruction latency time.
       There is no code for now to prevent it
   * To compare the MUM512 speed with the speed of SHA-2 (SHA512) and
-    SHA-3 (SHA3-512) go to the directory `src` and run a script `./bench-crypto.sh`
+    SHA-3 (SHA3-512) go to the directory `benchmarks` and run a script `./bench-crypto.sh`
     * SHA-2 and SHA-3 code is taken from [RHash](https://github.com/rhash/RHash.git)
   * Blake2 crypto-hash from [github.com/BLAKE2/BLAKE2](https://github.com/BLAKE2/BLAKE2)
     was added for comparison.  I use sse version of 64-bit Blake2 (blake2b).
@@ -275,7 +275,7 @@
     * Although MUM PRNG passed the test, it is not a cryptographically
       secure PRNG as is the hash function used for it
   * To compare the PRNG speeds go to
-    the directory `src` and run a script `./bench-prng.sh`
+    the directory `benchmarks` and run a script `./bench-prng.sh`
   * For the comparison I wrote crypto-secured Blum Blum Shub PRNG
     (file `bbs-prng.h`) and PRNGs based on fast cryto-level hash
     functions in ChaCha stream cipher (file `chacha-prng.h`) and
