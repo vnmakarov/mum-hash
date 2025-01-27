@@ -1,12 +1,12 @@
 # **Update (Jan. 27, 2025): New VMUM Hash and Benchmarks**
-* Six years have gone by since the last code release
-* New Vector mum-hash (**vmum**) has been released
-* New hashing speed data for modern CPUs is provided (see below) for
-  vmum and other different famous hashing algorithms
-* Mum v3 was updated.  It became more machine-independent and there
-  is an option to make it pass **all the tests** of a more rigorous version of
-  [SMHasher](https://github.com/rurban/smhasher)
-  (see datails below).
+* Six years have gone by since the last code release.  Here are the new changes:
+  * New Vector mum-hash (**vmum**) has been released
+  * New hashing speed data for modern CPUs is provided (see below) for
+    vmum and other different famous hashing algorithms
+  * Mum v3 was updated.  It became more machine-independent and there
+    is an option to make it pass **all the tests** of a more rigorous version of
+    [SMHasher](https://github.com/rurban/smhasher)
+    (see details below).
 	
 # MUM Hash
 * MUM hash is a **fast non-cryptographic hash function**
