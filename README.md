@@ -1,4 +1,4 @@
-# **Update Jan. 2025: New VMUM Hash and Benchmarks**
+# **Update (Jan. 27, 2025): New VMUM Hash and Benchmarks**
 * Six years have gone by since the last code release
 * New Vector mum-hash (**vmum**) has been released
 * New hashing speed data for modern CPUs is provided (see below) for
