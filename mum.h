@@ -1,4 +1,4 @@
-/* Copyright (c) 2016, 2017, 2018
+/* Copyright (c) 2016-2025
    Vladimir Makarov <vmakarov@gcc.gnu.org>
 
    Permission is hereby granted, free of charge, to any person
