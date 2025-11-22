@@ -148,12 +148,12 @@ static _VMUM_INLINE uint64_t _vmum (uint64_t v, uint64_t p) {
 }
 
 #if defined(_MSC_VER)
-#define _vmum_bswap_32(x) _byteswap_uint32_t (x)
-#define _vmum_bswap_64(x) _byteswap_uint64_t (x)
+#define _vmum_bswap32(x) _byteswap_uint32_t (x)
+#define _vmum_bswap64(x) _byteswap_uint64_t (x)
 #elif defined(__APPLE__)
 #include <libkern/OSByteOrder.h>
-#define _vmum_bswap_32(x) OSSwapInt32 (x)
-#define _vmum_bswap_64(x) OSSwapInt64 (x)
+#define _vmum_bswap32(x) OSSwapInt32 (x)
+#define _vmum_bswap64(x) OSSwapInt64 (x)
 #elif defined(__GNUC__)
 #define _vmum_bswap32(x) __builtin_bswap32 (x)
 #define _vmum_bswap64(x) __builtin_bswap64 (x)
