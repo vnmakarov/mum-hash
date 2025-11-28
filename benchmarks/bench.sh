@@ -48,7 +48,7 @@ skip () {
 print_time() {
     title="$1"
     secs=$2
-    printf '%-.2f %5.1fs|' `percent $base_time $secs "$title"` $secs
+    printf '%-.2f %5.2fs|' `percent $base_time $secs "$title"` $secs
 }
 
 TASKSET=""
@@ -66,7 +66,7 @@ run () {
       (time -p $TASKSET $program) >$temp 2>>$temp2
   fi
   if test x$ok = x;then echo $program: FAILED; return 1; fi
-  secs=`grep -E 'user[ 	]*[0-9]' $temp2 | sed s/.*user// | sed s/\\t// | sort -n | head -1`
+  secs=`grep -E 'user[ 	]*[0-9]' $temp2 | grep -F -v : | sed s/.*user// | sed s/\\t// | sort -n | head -1`
   if test x$flag != x;then base_time=$secs;fi
   print_time "$title" $secs
 }
@@ -77,34 +77,40 @@ check_meow=`(test $mach == x86_64 || test $mach == aarch64) && echo yes`
 check_meow=
 check_xxHash=
 
-echo -n '| Length    |   VMUM    |  MUM-V3   |  MUM-V2   |  Spooky   |   City    |'
+echo -n '| Length    |  VMUM-V2  |  VMUM-V1  |  MUM-V4   |  MUM-V3   |  Spooky   |   City    |'
 if test "$check_xxHash" == yes; then echo -n '  xxHash   |';fi
+if test "$check_rapid" == yes; then echo -n '  Rapidh   |';fi
 echo -n '  xxHash3  |   t1ha2   | SipHash24 |   Metro   |'
 if test "$check_meow" == yes; then echo ' MeowHash  |'; else echo; fi
-echo -n '|:----------|:---------:|:---------:|:---------:|:---------:|:---------:|'
+echo -n '|:----------|:---------:|:---------:|:---------:|:---------:|:---------:|:---------:|'
 if test "$check_xxHash" == yes; then echo -n ':---------:|';fi
+if test "$check_rapid" == yes; then echo -n ':---------:|';fi
 echo -n ':---------:|:---------:|:---------:|:---------:|'
 if test "$check_meow" == yes; then echo ':---------:|'; else echo; fi
 
-for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 48 64 96 128 192 256 512 1024 0;do # 
+for i in 3 4 5 6 7 8 9 10 11 12 13 14 15 16 32 64 96 128 192 256 512 1024 0;do
     if test $i == 0; then echo -n '| Bulk      |'; else printf '|%4d bytes |' $i;fi
-    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DVMUM -I../ bench.c && run "00vMUM" "./a.out" first
-    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && run "01MUM-V3" "./a.out"
-    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V2 -I../ bench.c && run "02MUM-V2" "./a.out"
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DVMUM -I../ bench.c && run "00vMUM-V2" "./a.out" first
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DVMUM -DVMUM_V1 -I../ bench.c && run "01vMUM-V1" "./a.out"
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -I../ bench.c && run "02MUM-V4" "./a.out"
+    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DMUM -DMUM_V3 -I../ bench.c && run "03MUM-V3" "./a.out"
     if test x${MUM_ONLY} == x; then
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky SpookyV2.o bench.c && run "03Spooky" "./a.out"
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && run "04City" "./a.out"
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSpooky SpookyV2.o bench.c && run "04Spooky" "./a.out"
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DCity City.o bench.c && run "05City" "./a.out"
 	if test "$check_xxHash" == yes;then
-	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash bench.c && run "05xxHash" "./a.out"
+	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DxxHash bench.c && run "06xxHash" "./a.out"
 	fi
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -Dxxh3 bench.c && run "06xxh3" "./a.out"
-	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -It1ha -DT1HA2 t1ha*.o bench.c && run "07t1ha2" "./a.out"
-	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && run "08Siphash24" "./a.out"
-	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && run "09Metro" "./a.out"
+	if test "$check_rapid" == yes;then
+            ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -fpermissive -DRAPID -I../ bench.c && run "07vRAPID" "./a.out"
+	fi
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -Dxxh3 bench.c && run "08xxh3" "./a.out"
+	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -It1ha -DT1HA2 t1ha*.o bench.c && run "09t1ha2" "./a.out"
+	${CC} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DSipHash siphash24.o bench.c && run "10Siphash24" "./a.out"
+	${CXX} -DDATA_LEN=$i ${COPTFLAGS} ${LTO} -w -fpermissive -DMETRO metrohash64.o -I../ bench.c && run "11Metro" "./a.out"
 	if test "$check_meow" == yes && test $mach == x86_64; then
-	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -mavx2 -maes -fpermissive -DMeowHash -I../ bench.c && run "10Meowhash" "./a.out"
+	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -mavx2 -maes -fpermissive -DMeowHash -I../ bench.c && run "12Meowhash" "./a.out"
 	elif test "$check_meow" == yes && test $mach == aarch64; then
-	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -march=native -fpermissive -DMeowHash -I../ bench.c && run "10Meowhash" "./a.out"
+	    ${CXX} -DDATA_LEN=$i ${COPTFLAGS} -w -march=native -fpermissive -DMeowHash -I../ bench.c && run "13Meowhash" "./a.out"
 	fi
     fi
     echo

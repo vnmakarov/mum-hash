@@ -200,6 +200,14 @@ static _MUM_INLINE uint64_t _mum_le16 (uint16_t v) {
 /* Rotate V left by SH. */
 static _MUM_INLINE uint64_t _mum_rotl (uint64_t v, int sh) { return v << sh | v >> (64 - sh); }
 
+static _MUM_INLINE uint64_t _mum_xor (uint64_t a, uint64_t b) {
+#ifdef MUM_V3
+  return a ^ b;
+#else
+  return (a ^ b) != 0 ? a ^ b : b;
+#endif
+}
+
 #if defined(MUM_V1) || defined(MUM_V2) || !defined(MUM_QUALITY)
 #define _MUM_TAIL_START(v) 0
 #else
@@ -228,8 +236,8 @@ static _MUM_INLINE uint64_t
       result ^= _mum (_mum_le (((uint64_t *) str)[i]), _mum_primes[i]);
 #else
     for (i = 0; i < _MUM_UNROLL_FACTOR; i += 2)
-      result ^= _mum (_mum_le (((uint64_t *) str)[i]) ^ _mum_primes[i],
-                      _mum_le (((uint64_t *) str)[i + 1]) ^ _mum_primes[i + 1]);
+      result ^= _mum (_mum_xor (_mum_le (((uint64_t *) str)[i]), _mum_primes[i]),
+                      _mum_xor (_mum_le (((uint64_t *) str)[i + 1]), _mum_primes[i + 1]));
 #endif
     len -= _MUM_UNROLL_FACTOR * sizeof (uint64_t);
     str += _MUM_UNROLL_FACTOR * sizeof (uint64_t);

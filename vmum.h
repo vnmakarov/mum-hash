@@ -22,11 +22,12 @@
    SOFTWARE.
 */
 
-/* This file implements VMUM (Vector MUltiply and Mix) hashing. We randomize input data by 64x64-bit
-   multiplication and mixing hi- and low-parts of the multiplication result by using an addition and
-   then mix it into the current state. We use random numbers generated with sha3sum for the
-   multiplication. When all the numbers are used once, the state is randomized and the same numbers
-   are used again for data randomization.
+/* This file implements VMUM (Vector MUltiply and Mix) hashing. We randomize
+   input data by 64x64-bit multiplication and mixing hi- and low-parts of the
+   multiplication result by using an addition and then mix it into the current
+   state. We use random numbers generated with sha3sum for the multiplication.
+   When all the numbers are used once, the state is randomized and the same
+   numbers are used again for data randomization.
 
    The VMUM hashing passes all rurban SMHasher tests. */
 
@@ -62,8 +63,8 @@ typedef unsigned __int64 uint64_t;
 
 /* Macro saying to use 128-bit integers implemented by GCC for some targets. */
 #ifndef _VMUM_USE_INT128
-/* In GCC uint128_t is defined if HOST_BITS_PER_WIDE_INT >= 64. HOST_WIDE_INT is long if
-   HOST_BITS_PER_LONG > HOST_BITS_PER_INT, otherwise int. */
+/* In GCC uint128_t is defined if HOST_BITS_PER_WIDE_INT >= 64. HOST_WIDE_INT
+   is long if HOST_BITS_PER_LONG > HOST_BITS_PER_INT, otherwise int. */
 #if defined(__GNUC__) && UINT_MAX != ULONG_MAX
 #define _VMUM_USE_INT128 1
 #else
@@ -71,8 +72,8 @@ typedef unsigned __int64 uint64_t;
 #endif
 #endif
 
-/* Here are different random numbers generated with the equal probability of their bit values. They
-   are used to randomize input values. */
+/* Here are different random numbers generated with the equal probability of
+   their bit values. They are used to randomize input values. */
 static uint64_t _vmum_hash_step_factor = 0x7fc65e8a22c2f74bull;
 static uint64_t _vmum_key_step_factor = 0x9b307d68270e94e5ull;
 static uint64_t _vmum_block_start_factor = 0x6608b54dafbc797cull;
@@ -87,6 +88,7 @@ static uint64_t _vmum_unroll_factors[] = {
   0x1a970df0a79d09baull,
 };
 
+static const uint64_t _vmum_zero[] = {0ull, 0ull, 0ull, 0ll};
 static uint64_t _vmum_factors[] = {
   0x0c3ec9639d3a203full, 0x898368b5fb060422ull, 0xfe3c08767c1e5068ull, 0x4535ac3cb182d3caull,
   0xba6ba8dcc8a2d978ull, 0x9f1221df37b27ca1ull, 0x57b1b40817cde05eull, 0xadb5c6075e5dd1c3ull,
@@ -114,7 +116,8 @@ static uint64_t _vmum_factors[] = {
   0xf112c880c63ddafdull, 0xff98b9575bfce057ull, 0xd6e8f6ad6f4da8aeull, 0xba0379ba20645a51ull,
 };
 
-/* Multiply 64-bit V and P and return sum of high and low parts of the result. */
+/* Multiply 64-bit V and P and return sum of high and low parts of the result.
+ */
 static _VMUM_INLINE uint64_t _vmum (uint64_t v, uint64_t p) {
   uint64_t hi, lo;
 #if _VMUM_USE_INT128
@@ -122,7 +125,8 @@ static _VMUM_INLINE uint64_t _vmum (uint64_t v, uint64_t p) {
   hi = (uint64_t) (r >> 64);
   lo = (uint64_t) r;
 #else
-  /* Implementation of 64x64->128-bit multiplication by four 32x32->64 bit multiplication. */
+  /* Implementation of 64x64->128-bit multiplication by four 32x32->64 bit
+   * multiplication. */
   uint64_t hv = v >> 32, hp = p >> 32;
   uint64_t lv = (uint32_t) v, lp = (uint32_t) p;
   uint64_t rh = hv * hp;
@@ -132,8 +136,8 @@ static _VMUM_INLINE uint64_t _vmum (uint64_t v, uint64_t p) {
   return rh + rl + rm_0 + rm_1;
   uint64_t t, carry = 0;
 
-  /* We could ignore a carry bit here if we did not care about the same hash for 32-bit and 64-bit
-     targets. */
+  /* We could ignore a carry bit here if we did not care about the same hash
+     for 32-bit and 64-bit targets. */
   t = rl + (rm_0 << 32);
 #ifdef VMUM_TARGET_INDEPENDENT_HASH
   carry = t < rl;
@@ -193,10 +197,26 @@ static _VMUM_INLINE uint64_t _vmum_le16 (uint16_t v) {
 #endif
 }
 
-/* Here is the vector code for different targets.  We process blocks of 256-bit length.
-   Vector consists of 64-bit elements.  The vector block update uses 32-bit x 32-bit usigned
-   multiplication to 64-bit result. The understand what the update implements see scalar version
-   below. */
+static _VMUM_INLINE uint64_t _vmum_xor (uint64_t a, uint64_t b) {
+#ifdef VMUM_V1
+  return a ^ b;
+#else
+  return (a ^ b) != 0 ? a ^ b : b;
+#endif
+}
+
+static _VMUM_INLINE uint64_t _vmum_plus (uint64_t a, uint64_t b) {
+#ifdef VMUM_V1
+  return a + b;
+#else
+  return a + b != 0 ? a + b : b;
+#endif
+}
+
+/* Here is the vector code for different targets.  We process blocks of 256-bit
+   length. Vector consists of 64-bit elements.  The vector block update uses
+   32-bit x 32-bit usigned multiplication to 64-bit result. The understand what
+   the update implements see scalar version below. */
 #if defined(__AVX2__)
 typedef long long __attribute__ ((vector_size (32), aligned (1))) _vmum_block_t;
 typedef int __attribute__ ((vector_size (32), aligned (1))) _vmum_v8si;
@@ -207,9 +227,18 @@ static _VMUM_INLINE _vmum_block_t _vmum_block (_vmum_block_t v, _vmum_block_t p)
                        + __builtin_ia32_pmuludq256 ((_vmum_v8si) hv, (_vmum_v8si) hp));
   return r;
 }
+static _VMUM_INLINE _vmum_block_t _vmum_nonzero (_vmum_block_t v) {
+  _vmum_block_t r
+    = (_vmum_block_t) __builtin_ia32_pcmpeqd256 ((_vmum_v8si) v, *(_vmum_v8si *) _vmum_zero);
+  return v | r;
+}
 static _VMUM_INLINE void _vmum_update_block (_vmum_block_t *s, const _vmum_block_t *v,
                                              const _vmum_block_t *p) {
+#ifdef VMUM_V1
   *s ^= _vmum_block (v[0] ^ p[0], v[1] ^ p[1]);
+#else
+  *s ^= _vmum_block (_vmum_nonzero (v[0] ^ p[0]), _vmum_nonzero (v[1] ^ p[1]));
+#endif
 }
 static _VMUM_INLINE void _vmum_factor_block (_vmum_block_t *s, const _vmum_block_t *p) {
   *s = _vmum_block (*s, *p);
@@ -228,11 +257,20 @@ static _VMUM_INLINE uint64x2_t _vmum_val (uint64x2_t v, uint64x2_t p) {
   uint64x2_t r = vmull_u32 (vget_low_u32 (v32), vget_low_u32 (p32)), r2 = vmull_high_u32 (v32, p32);
   return vpaddq_u64 (r, r2);
 }
+static _VMUM_INLINE uint64x2_t _vmum_nonzero (uint64x2_t v) {
+  uint64x2_t r = vceqzq_u64 (v);
+  return r | v;
+}
 static _VMUM_INLINE void _vmum_update_block (_vmum_block_t *s, const _vmum_block_t *v,
                                              const _vmum_block_t *p) {
   const _vmum_block_t *v2 = &v[1], *p2 = &p[1];
+#ifdef VMUM_V1
   s->v[0] ^= _vmum_val (v->v[0] ^ p->v[0], v2->v[0] ^ p2->v[0]);
   s->v[1] ^= _vmum_val (v->v[1] ^ p->v[1], v2->v[1] ^ p2->v[1]);
+#else
+  s->v[0] ^= _vmum_val (_vmum_nonzero (v->v[0] ^ p->v[0]), _vmum_nonzero (v2->v[0] ^ p2->v[0]));
+  s->v[1] ^= _vmum_val (_vmum_nonzero (v->v[1] ^ p->v[1]), _vmum_nonzero (v2->v[1] ^ p2->v[1]));
+#endif
 }
 static _VMUM_INLINE void _vmum_factor_block (_vmum_block_t *s, const _vmum_block_t *p) {
   s->v[0] = _vmum_val (s->v[0], p->v[0]);
@@ -252,17 +290,27 @@ static _VMUM_INLINE _vmum_v2di _vmum_val (_vmum_v2di v, _vmum_v2di p) {
   typedef unsigned int __attribute__ ((vector_size (16))) v4si;
   return (_vmum_v2di) (vec_mule ((v4si) v, (v4si) p) + vec_mulo ((v4si) v, (v4si) p));
 }
+static _VMUM_INLINE void _vmum_zero_block (_vmum_block_t *b) { *b = (_vmum_block_t) {0, 0, 0, 0}; }
+static _VMUM_INLINE _vmum_v2di _vmum_nonzero (_vmum_v2di v) {
+  __vector __bool long mask = vec_cmpne (v, (_vmum_v2di) {0ull, 0ull});
+  _vmum_v2di r = vec_sel ((_vmum_v2di) {0xffffffffffffffffull, 0xffffffffffffffffull}, v, mask);
+  return r;
+}
 static _VMUM_INLINE void _vmum_update_block (_vmum_block_t *s, const _vmum_block_t *v,
                                              const _vmum_block_t *p) {
   const _vmum_block_t *v2 = &v[1], *p2 = &p[1];
+#ifdef VMUM_V1
   s->v[0] ^= _vmum_val (v->v[0] ^ p->v[0], v2->v[0] ^ p2->v[0]);
   s->v[1] ^= _vmum_val (v->v[1] ^ p->v[1], v2->v[1] ^ p2->v[1]);
+#else
+  s->v[0] ^= _vmum_val (_vmum_nonzero (v->v[0] ^ p->v[0]), _vmum_nonzero (v2->v[0] ^ p2->v[0]));
+  s->v[1] ^= _vmum_val (_vmum_nonzero (v->v[1] ^ p->v[1]), _vmum_nonzero (v2->v[1] ^ p2->v[1]));
+#endif
 }
 static _VMUM_INLINE void _vmum_factor_block (_vmum_block_t *s, const _vmum_block_t *p) {
   s->v[0] = _vmum_val (s->v[0], p->v[0]);
   s->v[1] = _vmum_val (s->v[1], p->v[1]);
 }
-static _VMUM_INLINE void _vmum_zero_block (_vmum_block_t *b) { *b = (_vmum_block_t) {0, 0, 0, 0}; }
 static _VMUM_INLINE uint64_t _vmum_fold_block (_vmum_block_t *b) {
   return b->v[0][0] ^ b->v[0][1] ^ b->v[1][0] ^ b->v[1][1];
 }
@@ -277,10 +325,14 @@ static _VMUM_INLINE uint64_t _vmum_val (uint64_t v, uint64_t p) {
 static _VMUM_INLINE void _vmum_update_block (_vmum_block_t *s, const _vmum_block_t *v,
                                              const _vmum_block_t *p) {
   const _vmum_block_t *v2 = &v[1], *p2 = &p[1];
-  s->v[0] ^= _vmum_val (_vmum_le (v->v[0]) ^ p->v[0], _vmum_le (v2->v[0]) ^ p2->v[0]);
-  s->v[1] ^= _vmum_val (_vmum_le (v->v[1]) ^ p->v[1], _vmum_le (v2->v[1]) ^ p2->v[1]);
-  s->v[2] ^= _vmum_val (_vmum_le (v->v[2]) ^ p->v[2], _vmum_le (v2->v[2]) ^ p2->v[2]);
-  s->v[3] ^= _vmum_val (_vmum_le (v->v[3]) ^ p->v[3], _vmum_le (v2->v[3]) ^ p2->v[3]);
+  s->v[0] ^= _vmum_val (_vmum_xor (_vmum_le (v->v[0]), p->v[0]),
+                        _vmum_xor (_vmum_le (v2->v[0]), p2->v[0]));
+  s->v[1] ^= _vmum_val (_vmum_xor (_vmum_le (v->v[1]), p->v[1]),
+                        _vmum_xor (_vmum_le (v2->v[1]), p2->v[1]));
+  s->v[2] ^= _vmum_val (_vmum_xor (_vmum_le (v->v[2]), p->v[2]),
+                        _vmum_xor (_vmum_le (v2->v[2]), p2->v[2]));
+  s->v[3] ^= _vmum_val (_vmum_xor (_vmum_le (v->v[3]), p->v[3]),
+                        _vmum_xor (_vmum_le (v2->v[3]), p2->v[3]));
 }
 static _VMUM_INLINE void _vmum_factor_block (_vmum_block_t *s, const _vmum_block_t *p) {
   s->v[0] = _vmum_val (s->v[0], p->v[0]);
@@ -294,13 +346,14 @@ static _VMUM_INLINE uint64_t _vmum_fold_block (_vmum_block_t *b) {
 }
 #endif
 
-/* Macro defining how many vectors the most the 1st nested loop in _vmum_hash_aligned will be
-   unrolled by the compiler (although it can make an own decision:). Use only a constant here to
-   help a compiler to unroll a major loop. The unroll factor greatly affects the hashing speed. We
-   prefer the speed. */
+/* Macro defining how many vectors the most the 1st nested loop in
+   _vmum_hash_aligned will be unrolled by the compiler (although it can make an
+   own decision:). Use only a constant here to help a compiler to unroll a
+   major loop. The unroll factor greatly affects the hashing speed. We prefer
+   the speed. */
 #define _VMUM_UNROLL_BLOCK_FACTOR 16
-/* Macro defining how many uint64 the most the 2st nested loop in _vmum_hash_aligned will be
-   unrolled by the compiler. */
+/* Macro defining how many uint64 the most the 2st nested loop in
+   _vmum_hash_aligned will be unrolled by the compiler. */
 #define _VMUM_UNROLL_FACTOR 16
 
 static _VMUM_INLINE uint64_t
@@ -325,7 +378,8 @@ static _VMUM_INLINE uint64_t
                             &((_vmum_block_t *) _vmum_factors)[i]);
       len -= _VMUM_UNROLL_BLOCK_FACTOR * sizeof (_vmum_block_t);
       str += _VMUM_UNROLL_BLOCK_FACTOR * sizeof (_vmum_block_t);
-      /* We will use the same factor numbers on the next iterations -- randomize the state. */
+      /* We will use the same factor numbers on the next iterations --
+       * randomize the state. */
       _vmum_factor_block (&block_state, (_vmum_block_t *) _vmum_unroll_factors);
     } while (len >= _VMUM_UNROLL_BLOCK_FACTOR * sizeof (_vmum_block_t));
     state += _vmum_fold_block (&block_state);
@@ -336,47 +390,48 @@ static _VMUM_INLINE uint64_t
   i = 0;
   while (len >= _VMUM_UNROLL_FACTOR * sizeof (uint64_t)) {
     for (j = 0; j < _VMUM_UNROLL_FACTOR; j += 2, i += 2)
-      state ^= _vmum (_vmum_le (((uint64_t *) str)[i]) ^ _vmum_factors[i],
-                      _vmum_le (((uint64_t *) str)[i + 1]) ^ _vmum_factors[i + 1]);
+      state ^= _vmum (_vmum_xor (_vmum_le (((uint64_t *) str)[i]), _vmum_factors[i]),
+                      _vmum_xor (_vmum_le (((uint64_t *) str)[i + 1]), _vmum_factors[i + 1]));
     len -= _VMUM_UNROLL_FACTOR * sizeof (uint64_t);
   }
   n = len / sizeof (uint64_t) & ~(size_t) 1;
   for (j = 0; j < n; j += 2, i += 2)
-    state ^= _vmum (_vmum_le (((uint64_t *) str)[i]) + _vmum_factors[i],
-                    _vmum_le (((uint64_t *) str)[i + 1]) + _vmum_factors[i + 1]);
+    state ^= _vmum (_vmum_plus (_vmum_le (((uint64_t *) str)[i]), _vmum_factors[i]),
+                    _vmum_plus (_vmum_le (((uint64_t *) str)[i + 1]), _vmum_factors[i + 1]));
   len -= n * sizeof (uint64_t);
   str += i * sizeof (uint64_t);
+  uint64_t p;
   switch (len) {
   case 15:
-    w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
+    w = _vmum_plus (_vmum_le (*(uint64_t *) str), _vmum_factors[i]);
     u64 = _vmum_factors[i + 1] + _vmum_le32 (*(uint32_t *) (str + 8));
     u64 += (_vmum_le16 (*(uint16_t *) (str + 12)) << 32) + ((uint64_t) str[14] << 48);
     return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 14:
-    w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
+    w = _vmum_plus (_vmum_le (*(uint64_t *) str), _vmum_factors[i]);
     u64 = _vmum_factors[i + 2] + _vmum_le32 (*(uint32_t *) (str + 8));
     u64 += _vmum_le16 (*(uint16_t *) (str + 12)) << 32;
     return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 13:
-    w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
+    w = _vmum_plus (_vmum_le (*(uint64_t *) str), _vmum_factors[i]);
     u64 = _vmum_factors[i + 3] + _vmum_le32 (*(uint32_t *) (str + 8));
     u64 += (uint64_t) str[12] << 32;
     return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 12:
-    w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
+    w = _vmum_plus (_vmum_le (*(uint64_t *) str), _vmum_factors[i]);
     u64 = _vmum_factors[i + 4] + _vmum_le32 (*(uint32_t *) (str + 8));
     return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 11:
-    w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
+    w = _vmum_plus (_vmum_le (*(uint64_t *) str), _vmum_factors[i]);
     u64 = _vmum_factors[i + 5] + _vmum_le16 (*(uint16_t *) (str + 8));
     u64 += (uint64_t) str[10] << 16;
     return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 10:
-    w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
+    w = _vmum_plus (_vmum_le (*(uint64_t *) str), _vmum_factors[i]);
     u64 = _vmum_factors[i + 6] + _vmum_le16 (*(uint16_t *) (str + 8));
     return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 9:
-    w = _vmum_le (*(uint64_t *) str) + _vmum_factors[i];
+    w = _vmum_plus (_vmum_le (*(uint64_t *) str), _vmum_factors[i]);
     u64 = _vmum_factors[i + 7] + str[8];
     return state ^ _vmum (u64 ^ _vmum_tail_factor, w);
   case 8: return state ^ _vmum (_vmum_le (*(uint64_t *) str) + _vmum_factors[i], _vmum_factors[i]);
@@ -423,8 +478,9 @@ static _VMUM_INLINE uint64_t _vmum_final (uint64_t h) {
 #endif
 #endif
 
-/* When we need an aligned access to data being hashed we move part of the unaligned data to an
-   aligned block of given size and then process it, repeating processing the data by the block. */
+/* When we need an aligned access to data being hashed we move part of the
+   unaligned data to an aligned block of given size and then process it,
+   repeating processing the data by the block. */
 #ifndef _VMUM_BLOCK_LEN
 #define _VMUM_BLOCK_LEN 1024
 #endif
@@ -496,13 +552,14 @@ static _VMUM_INLINE uint64_t vmum_hash_step (uint64_t h, uint64_t key) {
 /* Return the result of hashing using the current state H. */
 static _VMUM_INLINE uint64_t vmum_hash_finish (uint64_t h) { return _vmum_final (h); }
 
-/* Fast hashing of KEY with SEED. The hash is always the same for the same key on any target. */
+/* Fast hashing of KEY with SEED. The hash is always the same for the same key
+ * on any target. */
 static _VMUM_INLINE size_t vmum_hash64 (uint64_t key, uint64_t seed) {
   return vmum_hash_finish (vmum_hash_step (vmum_hash_init (seed + 8), key));
 }
 
-/* Hash data KEY of length LEN and SEED. The hash depends on the target endianess and the unroll
-   factor. */
+/* Hash data KEY of length LEN and SEED. The hash depends on the target
+   endianess and the unroll factor. */
 static _VMUM_INLINE uint64_t vmum_hash (const void *key, size_t len, uint64_t seed) {
 #if _VMUM_UNALIGNED_ACCESS
   return _vmum_final (_vmum_hash_aligned (seed + len, key, len));

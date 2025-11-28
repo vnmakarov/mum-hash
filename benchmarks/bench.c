@@ -141,6 +141,16 @@ static void mum_test64 (const void *key, int len, uint32_t seed, void *out) {
 #define test mum_test
 #define test64 mum_test64
 
+#elif defined(RAPID)
+
+#include "rapidhash.h"
+static void rapid_test (const void *key, int len, uint32_t seed, void *out) {
+  *(uint64_t *) out = rapidhash_withSeed (key, len, seed);
+}
+
+#define test rapid_test
+#define test64 rapid_test
+
 #else
 #error "I don't know what to test"
 #endif
