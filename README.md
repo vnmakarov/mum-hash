@@ -12,7 +12,7 @@
   least I found the same vulnerability in [wyhash](https://github.com/wangyi-fudan/wyhash/blob/46cebe9dc4e51f94d0dca287733bc5a94f76a10d/wyhash.h#L130) and [rapidhash](https://github.com/Nicoshev/rapidhash/blob/d60698faa10916879f85b2799bfdc6996b94c2b7/rapidhash.h#L383)
 * After the code change, the safe variants of VMUM and MUM hashes are
   switched on by default.  If you want previous variants, please use
-  macros VMUM_V1 and MUM_V3 correspondinly.  I believe there are still
+  macros VMUM_V1 and MUM_V3 correspondingly.  I believe there are still
   cases when they can be used, e.g. for hash tables in compilers.
 * The fix consist of checking _vmum operands on zero and use nonzero value instead
   * all checks are implemented to avoid branch instruction generations to keep hash calculation pipeline going
