@@ -88,7 +88,7 @@ static uint64_t _vmum_unroll_factors[] = {
   0x1a970df0a79d09baull,
 };
 
-static const uint64_t _vmum_zero[] = {0ull, 0ull, 0ull, 0ll};
+static const uint64_t _vmum_zero[] = {0ull, 0ull, 0ull, 0ull};
 static uint64_t _vmum_factors[] = {
   0x0c3ec9639d3a203full, 0x898368b5fb060422ull, 0xfe3c08767c1e5068ull, 0x4535ac3cb182d3caull,
   0xba6ba8dcc8a2d978ull, 0x9f1221df37b27ca1ull, 0x57b1b40817cde05eull, 0xadb5c6075e5dd1c3ull,
@@ -133,7 +133,6 @@ static _VMUM_INLINE uint64_t _vmum (uint64_t v, uint64_t p) {
   uint64_t rm_0 = hv * lp;
   uint64_t rm_1 = hp * lv;
   uint64_t rl = lv * lp;
-  return rh + rl + rm_0 + rm_1;
   uint64_t t, carry = 0;
 
   /* We could ignore a carry bit here if we did not care about the same hash
@@ -229,7 +228,7 @@ static _VMUM_INLINE _vmum_block_t _vmum_block (_vmum_block_t v, _vmum_block_t p)
 }
 static _VMUM_INLINE _vmum_block_t _vmum_nonzero (_vmum_block_t v) {
   _vmum_block_t r
-    = (_vmum_block_t) __builtin_ia32_pcmpeqd256 ((_vmum_v8si) v, *(_vmum_v8si *) _vmum_zero);
+    = (_vmum_block_t) __builtin_ia32_pcmpeqq256 ((_vmum_block_t) v, *(_vmum_block_t *) _vmum_zero);
   return v | r;
 }
 static _VMUM_INLINE void _vmum_update_block (_vmum_block_t *s, const _vmum_block_t *v,
