@@ -219,6 +219,7 @@ static _VMUM_INLINE uint64_t _vmum_plus (uint64_t a, uint64_t b) {
 #if defined(__AVX2__)
 typedef long long __attribute__ ((vector_size (32), aligned (1))) _vmum_block_t;
 typedef int __attribute__ ((vector_size (32), aligned (1))) _vmum_v8si;
+typedef int __attribute__ ((vector_size (32), aligned (1))) _vmum_v8di;
 static _VMUM_INLINE _vmum_block_t _vmum_block (_vmum_block_t v, _vmum_block_t p) {
   _vmum_block_t hv = v >> 32, hp = p >> 32;
   _vmum_block_t r
