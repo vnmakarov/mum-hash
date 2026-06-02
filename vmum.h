@@ -400,7 +400,6 @@ static _VMUM_INLINE uint64_t
                     _vmum_plus (_vmum_le (((uint64_t *) str)[i + 1]), _vmum_factors[i + 1]));
   len -= n * sizeof (uint64_t);
   str += i * sizeof (uint64_t);
-  uint64_t p;
   switch (len) {
   case 15:
     w = _vmum_plus (_vmum_le (*(uint64_t *) str), _vmum_factors[i]);
